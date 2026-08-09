@@ -1,0 +1,57 @@
+package com.smsexpense.tracker.ui.settings
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smsexpense.tracker.domain.repository.ApiSettings
+import com.smsexpense.tracker.domain.repository.BubbleSettings
+import com.smsexpense.tracker.domain.repository.SettingsRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+data class SettingsUiState(
+    val loading: Boolean = true,
+    val senderIds: List<String> = emptyList(),
+    val defaultCurrency: String = "JOD",
+    val confidenceThreshold: Float = 0.5f,
+    val bubble: BubbleSettings = BubbleSettings(enabled = true, autoHideSeconds = 45, startY = 300),
+    val api: ApiSettings = ApiSettings(enabled = false, baseUrl = "", authToken = ""),
+)
+
+class SettingsViewModel(
+    private val settings: SettingsRepository,
+) : ViewModel() {
+
+    val uiState: StateFlow<SettingsUiState> = combine(
+        settings.senderIds,
+        settings.defaultCurrency,
+        settings.confidenceThreshold,
+        settings.bubbleSettings,
+        settings.apiSettings,
+    ) { senders, currency, threshold, bubble, api ->
+        SettingsUiState(
+            loading = false,
+            senderIds = senders.sorted(),
+            defaultCurrency = currency,
+            confidenceThreshold = threshold,
+            bubble = bubble,
+            api = api,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
+
+    fun addSenderId(id: String) = launch { settings.addSenderId(id) }
+    fun removeSenderId(id: String) = launch { settings.removeSenderId(id) }
+    fun setDefaultCurrency(code: String) = launch { settings.setDefaultCurrency(code) }
+    fun setConfidenceThreshold(value: Float) = launch { settings.setConfidenceThreshold(value) }
+    fun setBubbleEnabled(enabled: Boolean) = launch { settings.setBubbleEnabled(enabled) }
+    fun setBubbleAutoHide(seconds: Int) = launch { settings.setBubbleAutoHideSeconds(seconds) }
+    fun setApiEnabled(enabled: Boolean) = launch { settings.setApiEnabled(enabled) }
+    fun setApiBaseUrl(url: String) = launch { settings.setApiBaseUrl(url) }
+    fun setApiAuthToken(token: String) = launch { settings.setApiAuthToken(token) }
+
+    private fun launch(block: suspend () -> Unit) {
+        viewModelScope.launch { block() }
+    }
+}
