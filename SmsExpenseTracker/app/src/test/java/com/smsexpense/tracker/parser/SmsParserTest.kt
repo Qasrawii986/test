@@ -1,9 +1,14 @@
 package com.smsexpense.tracker.parser
 
 import com.smsexpense.tracker.domain.model.IncomingMessage
+import com.smsexpense.tracker.domain.model.TransactionDirection
+import com.smsexpense.tracker.domain.model.TransactionType
+import com.smsexpense.tracker.domain.model.direction
+import com.smsexpense.tracker.domain.model.isExpense
 import com.smsexpense.tracker.domain.parser.ParseOutcome
 import com.smsexpense.tracker.domain.parser.SmsParser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -21,9 +26,110 @@ class SmsParserTest {
         return (outcome as ParseOutcome.Payment).candidate
     }
 
-    private fun expectNotPayment(body: String) {
+    private fun expectNotPayment(body: String): ParseOutcome.NotPayment {
         val outcome = parse(body)
         assertTrue("Expected NOT payment for: $body, got $outcome", outcome is ParseOutcome.NotPayment)
+        return outcome as ParseOutcome.NotPayment
+    }
+
+    // ============ CliQ transfers (bug fix) ============
+
+    private val cliqOutSms = "13.000 JOD CliQ transfer to Abdulraheem Rizk.\nAvailable balance: 594.511 JOD."
+
+    // Test 1 — CliQ outgoing is a payment with full extraction
+    @Test
+    fun `cliq outgoing transfer is an expense with recipient as counterparty`() {
+        val c = expectPayment(cliqOutSms)
+        assertEquals(TransactionType.CLIQ_TRANSFER_OUT, c.type)
+        assertEquals(13.0, c.amount, 0.0001)
+        assertEquals("JOD", c.currency)
+        assertEquals("Abdulraheem Rizk", c.merchant)
+        assertTrue(c.type.isExpense)
+        assertEquals(TransactionDirection.OUTGOING, c.type.direction)
+    }
+
+    // Test 5 — the balance must never be mistaken for the amount
+    @Test
+    fun `available balance is never extracted as the transaction amount`() {
+        val c = expectPayment(cliqOutSms)
+        assertEquals(13.0, c.amount, 0.0001)
+        assertTrue(c.amount != 594.511)
+    }
+
+    @Test
+    fun `cliq casing variants all parse`() {
+        for (variant in listOf("CliQ", "CLIQ", "cliq", "Cliq")) {
+            val c = expectPayment("25.00 JOD $variant transfer to Ahmad.")
+            assertEquals(TransactionType.CLIQ_TRANSFER_OUT, c.type)
+            assertEquals(25.0, c.amount, 0.0001)
+            assertEquals("Ahmad", c.merchant)
+        }
+    }
+
+    @Test
+    fun `cliq with currency before amount parses`() {
+        val c = expectPayment("JOD 10.500 CliQ transfer to Ahmad.")
+        assertEquals(10.5, c.amount, 0.0001)
+        assertEquals("JOD", c.currency)
+        assertEquals("Ahmad", c.merchant)
+    }
+
+    @Test
+    fun `arabic cliq transfer parses`() {
+        val c = expectPayment("تم تحويل 13.000 دينار عبر CliQ إلى محمد خالد")
+        assertEquals(TransactionType.CLIQ_TRANSFER_OUT, c.type)
+        assertEquals(13.0, c.amount, 0.0001)
+        assertEquals("JOD", c.currency)
+        assertEquals("محمد خالد", c.merchant)
+    }
+
+    @Test
+    fun `arabic cliq with kaleek spelling parses`() {
+        val c = expectPayment("تم تحويل مبلغ 13.000 JOD عبر كليك إلى سامر")
+        assertEquals(TransactionType.CLIQ_TRANSFER_OUT, c.type)
+        assertEquals("سامر", c.merchant)
+    }
+
+    // Test 4 — incoming CliQ is NOT an expense
+    @Test
+    fun `incoming cliq transfer is not an expense`() {
+        val outcome = expectNotPayment("13.000 JOD CliQ transfer from Ahmad.\nAvailable balance: 620.511 JOD.")
+        assertEquals(TransactionType.INCOMING_TRANSFER, outcome.type)
+        assertFalse(outcome.type.isExpense)
+        assertEquals(TransactionDirection.INCOMING, outcome.type.direction)
+    }
+
+    // Test 2 — the real OTP message must never become a 108.92 SAR expense
+    @Test
+    fun `otp with amount is classified as OTP not a payment`() {
+        val outcome = expectNotPayment(
+            "554794 هو رمز التأكيد OTP لتنفيذ حركة شراء بقيمة SAR 108.92 من ghassan ah " +
+                "ببطاقتك المنتهية بالأرقام 6797. لا تشارك هذا الرمز مع أحد"
+        )
+        assertEquals(TransactionType.OTP, outcome.type)
+    }
+
+    @Test
+    fun `arabic authorization code without the word OTP is still rejected`() {
+        val outcome = expectNotPayment("رمز التأكيد لعملية الشراء بقيمة 50.00 JOD هو 112233")
+        assertEquals(TransactionType.OTP, outcome.type)
+    }
+
+    // Test 3 — the real card-purchase format keeps working
+    @Test
+    fun `card purchase with balance line still parses correctly`() {
+        val c = expectPayment("21.428 JOD at ghassan ah.\nCard 797.\nAvailable balance: 607.511 JOD.")
+        assertEquals(TransactionType.CARD_PURCHASE, c.type)
+        assertEquals(21.428, c.amount, 0.0001)
+        assertEquals("JOD", c.currency)
+        assertEquals("ghassan ah", c.merchant)
+        assertTrue(c.type.isExpense)
+    }
+
+    @Test
+    fun `balance-only notification is not a transaction`() {
+        val outcome = expectNotPayment("Available balance: 594.511 JOD.")
+        assertEquals(TransactionType.BALANCE_UPDATE, outcome.type)
     }
 
     // --- 1. Arabic payment ---

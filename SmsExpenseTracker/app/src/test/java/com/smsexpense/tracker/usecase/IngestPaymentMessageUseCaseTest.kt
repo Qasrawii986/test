@@ -84,4 +84,38 @@ class IngestPaymentMessageUseCaseTest {
         val outcome = useCase(message(sender = "UNKNOWN"), skipSenderFilter = true)
         assertTrue(outcome is IngestOutcome.PaymentSaved)
     }
+
+    // --- Test 6: daily CliQ SMS goes through the normal pipeline and gets saved
+    // (the bubble is launched by the receiver for every PaymentSaved outcome).
+    @Test
+    fun `daily cliq transfer sms is saved as a payment`() = runTest {
+        val outcome = useCase(
+            message(body = "13.000 JOD CliQ transfer to Abdulraheem Rizk.\nAvailable balance: 594.511 JOD.")
+        )
+        assertTrue("got $outcome", outcome is IngestOutcome.PaymentSaved)
+        val saved = payments.all().single()
+        assertEquals(13.0, saved.amount, 0.0001)
+        assertEquals("Abdulraheem Rizk", saved.merchant)
+    }
+
+    @Test
+    fun `daily incoming cliq sms is not saved`() = runTest {
+        val outcome = useCase(
+            message(body = "13.000 JOD CliQ transfer from Ahmad.\nAvailable balance: 620.511 JOD.")
+        )
+        assertTrue(outcome is IngestOutcome.NotAPayment)
+        assertTrue(payments.all().isEmpty())
+    }
+
+    @Test
+    fun `daily otp sms with amount is not saved`() = runTest {
+        val outcome = useCase(
+            message(
+                body = "554794 هو رمز التأكيد OTP لتنفيذ حركة شراء بقيمة SAR 108.92 من ghassan ah " +
+                    "ببطاقتك المنتهية بالأرقام 6797. لا تشارك هذا الرمز مع أحد"
+            )
+        )
+        assertTrue(outcome is IngestOutcome.NotAPayment)
+        assertTrue(payments.all().isEmpty())
+    }
 }

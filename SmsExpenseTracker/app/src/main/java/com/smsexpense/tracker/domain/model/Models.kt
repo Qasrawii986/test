@@ -10,8 +10,41 @@ data class IncomingMessage(
     val timestamp: Long,
 )
 
+/** What kind of bank message this is, by meaning — not just "contains an amount". */
+enum class TransactionType {
+    CARD_PURCHASE,
+    CLIQ_TRANSFER_OUT,
+    BANK_TRANSFER_OUT,
+    CASH_WITHDRAWAL,
+    REFUND,
+    INCOMING_TRANSFER,
+    OTP,
+    BALANCE_UPDATE,
+    NON_TRANSACTION,
+    UNKNOWN,
+}
+
+enum class TransactionDirection { OUTGOING, INCOMING, NONE }
+
+/** Only completed outgoing money movements count as expenses. */
+val TransactionType.isExpense: Boolean
+    get() = this == TransactionType.CARD_PURCHASE ||
+        this == TransactionType.CLIQ_TRANSFER_OUT ||
+        this == TransactionType.BANK_TRANSFER_OUT ||
+        this == TransactionType.CASH_WITHDRAWAL
+
+val TransactionType.direction: TransactionDirection
+    get() = when {
+        isExpense -> TransactionDirection.OUTGOING
+        this == TransactionType.INCOMING_TRANSFER || this == TransactionType.REFUND ->
+            TransactionDirection.INCOMING
+        else -> TransactionDirection.NONE
+    }
+
 /**
  * A parsed payment extracted from an [IncomingMessage], before persistence.
+ * [merchant] doubles as the counterparty: the store for card purchases, the
+ * recipient for outgoing CliQ/bank transfers.
  */
 data class PaymentCandidate(
     val amount: Double,
@@ -21,6 +54,7 @@ data class PaymentCandidate(
     val originalMessage: String,
     val timestamp: Long,
     val confidence: Float,
+    val type: TransactionType = TransactionType.CARD_PURCHASE,
 )
 
 enum class PaymentStatus { UNCATEGORIZED, CATEGORIZED }

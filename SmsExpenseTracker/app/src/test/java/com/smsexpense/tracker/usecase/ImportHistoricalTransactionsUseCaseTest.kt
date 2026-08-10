@@ -155,6 +155,62 @@ class ImportHistoricalTransactionsUseCaseTest {
         assertEquals(1, done.alreadyImported)
     }
 
+    // --- Test 7: the exact CliQ SMS appears in historical review and imports cleanly
+    @Test
+    fun `historical cliq transfer appears in scan and can be imported with a category`() = runTest {
+        smsSource.inbox = listOf(
+            IncomingMessage(
+                "MYBANK",
+                "13.000 JOD CliQ transfer to Abdulraheem Rizk.\nAvailable balance: 594.511 JOD.",
+                base,
+            ),
+            // OTP in the same inbox must NOT appear
+            IncomingMessage(
+                "MYBANK",
+                "554794 هو رمز التأكيد OTP لتنفيذ حركة شراء بقيمة SAR 108.92 من ghassan ah " +
+                    "ببطاقتك المنتهية بالأرقام 6797. لا تشارك هذا الرمز مع أحد",
+                base + 1,
+            ),
+            // Incoming CliQ must NOT appear
+            IncomingMessage("MYBANK", "13.000 JOD CliQ transfer from Ahmad.", base + 2),
+        )
+        val done = scanAll()
+        assertEquals(1, done.candidates.size)
+        val candidate = done.candidates.single().candidate
+        assertEquals(13.0, candidate.amount, 0.0001)
+        assertEquals("Abdulraheem Rizk", candidate.merchant)
+
+        val summary = useCase.import(listOf(candidate to 5L), 0, Long.MAX_VALUE)
+        assertEquals(1, summary.imported)
+        val saved = payments.all().single()
+        assertEquals(5L, saved.categoryId)
+        assertEquals(PaymentStatus.CATEGORIZED, saved.status)
+        assertEquals(
+            com.smsexpense.tracker.domain.model.SyncStatus.PENDING,
+            saved.syncStatus, // enters the normal sync queue
+        )
+    }
+
+    // --- Test 8: importing the same CliQ SMS twice never duplicates
+    @Test
+    fun `cliq re-import is idempotent`() = runTest {
+        smsSource.inbox = listOf(
+            IncomingMessage(
+                "MYBANK",
+                "13.000 JOD CliQ transfer to Abdulraheem Rizk.\nAvailable balance: 594.511 JOD.",
+                base,
+            ),
+        )
+        val first = scanAll()
+        assertEquals(1, first.candidates.size)
+        useCase.import(first.candidates.map { it.candidate to null }, 0, Long.MAX_VALUE)
+
+        val second = scanAll()
+        assertEquals(0, second.candidates.size)
+        assertEquals(1, second.alreadyImported)
+        assertEquals(1, payments.all().size)
+    }
+
     @Test
     fun `unparseable messages never crash the scan`() = runTest {
         smsSource.inbox = listOf(

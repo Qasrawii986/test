@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 
 private const val SAMPLE_AR = "تم خصم 12.50 JOD من بطاقتك لدى Coffee Shop"
 private const val SAMPLE_EN = "Purchase of JOD 25.00 at SuperMart using card ending 1234"
+private const val SAMPLE_CLIQ = "13.000 JOD CliQ transfer to Abdulraheem Rizk.\nAvailable balance: 594.511 JOD."
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -89,6 +90,7 @@ fun DebugScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { body = SAMPLE_AR }) { Text("Arabic sample") }
                         OutlinedButton(onClick = { body = SAMPLE_EN }) { Text("English sample") }
+                        OutlinedButton(onClick = { body = SAMPLE_CLIQ }) { Text("CliQ sample") }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = respectFilter, onCheckedChange = { respectFilter = it })
