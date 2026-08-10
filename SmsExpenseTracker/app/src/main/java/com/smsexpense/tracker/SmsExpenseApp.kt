@@ -54,6 +54,20 @@ class AppContainer(private val app: Application) {
         IngestPaymentMessageUseCase(parser, paymentRepository, settingsRepository)
     }
 
+    val importHistoryRepository: com.smsexpense.tracker.domain.repository.ImportHistoryRepository by lazy {
+        com.smsexpense.tracker.data.repository.RoomImportHistoryRepository(database.importHistoryDao())
+    }
+
+    val deviceSmsSource: com.smsexpense.tracker.domain.source.DeviceSmsSource by lazy {
+        com.smsexpense.tracker.data.local.sms.ContentResolverSmsSource(app)
+    }
+
+    val importHistoricalTransactions: com.smsexpense.tracker.domain.usecase.ImportHistoricalTransactionsUseCase by lazy {
+        com.smsexpense.tracker.domain.usecase.ImportHistoricalTransactionsUseCase(
+            deviceSmsSource, parser, paymentRepository, settingsRepository, importHistoryRepository,
+        )
+    }
+
     val syncPayments: SyncPaymentsUseCase by lazy {
         SyncPaymentsUseCase(paymentRepository, categoryRepository, apiClient)
     }

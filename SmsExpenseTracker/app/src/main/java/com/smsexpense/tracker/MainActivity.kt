@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.flow.first
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -93,6 +94,16 @@ class MainActivity : ComponentActivity() {
         val defaultCurrency by container.settingsRepository.defaultCurrency
             .collectAsState(initial = "JOD")
 
+        // First-run setup wizard: shown once when nothing is configured yet.
+        val setupNeeded by androidx.compose.runtime.produceState<Boolean?>(initialValue = null) {
+            val done = container.settingsRepository.setupCompleted.first()
+            val senders = container.settingsRepository.senderIds.first()
+            value = !done && senders.isEmpty()
+        }
+        androidx.compose.runtime.LaunchedEffect(setupNeeded) {
+            if (setupNeeded == true) navController.navigate("setup")
+        }
+
         NavHost(navController = navController, startDestination = "dashboard") {
             composable("dashboard") {
                 val vm: DashboardViewModel = viewModel(
@@ -138,7 +149,56 @@ class MainActivity : ComponentActivity() {
                 val vm: SettingsViewModel = viewModel(
                     factory = SimpleFactory { SettingsViewModel(container.settingsRepository) }
                 )
-                SettingsScreen(viewModel = vm, onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
+                    onChooseFromSms = { navController.navigate("senderPicker") },
+                    onImportHistorical = { navController.navigate("historicalImport") },
+                )
+            }
+            composable("senderPicker") {
+                val vm: com.smsexpense.tracker.ui.senderpicker.SenderPickerViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.senderpicker.SenderPickerViewModel(
+                            container.deviceSmsSource,
+                            container.settingsRepository,
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.senderpicker.SenderPickerScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable("historicalImport") {
+                val vm: com.smsexpense.tracker.ui.import_.HistoricalImportViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.import_.HistoricalImportViewModel(
+                            importUseCase = container.importHistoricalTransactions,
+                            settingsRepository = container.settingsRepository,
+                            categoryRepository = container.categoryRepository,
+                            importHistoryRepository = container.importHistoryRepository,
+                            onImported = { SyncScheduler.scheduleIfEnabled(this@MainActivity) },
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.import_.HistoricalImportScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable("setup") {
+                val vm: com.smsexpense.tracker.ui.onboarding.SetupViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.onboarding.SetupViewModel(container.settingsRepository)
+                    }
+                )
+                com.smsexpense.tracker.ui.onboarding.SetupScreen(
+                    viewModel = vm,
+                    onChooseFromSms = { navController.navigate("senderPicker") },
+                    onImportHistorical = { navController.navigate("historicalImport") },
+                    onFinish = { navController.popBackStack("dashboard", inclusive = false) },
+                )
             }
             composable("debug") {
                 val vm: DebugViewModel = viewModel(

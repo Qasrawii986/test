@@ -12,8 +12,23 @@ sealed class IngestResult {
 }
 
 interface PaymentRepository {
-    /** Idempotent: the same candidate (same dedup key) never creates a second row. */
-    suspend fun ingest(candidate: PaymentCandidate): IngestResult
+    /**
+     * Idempotent: the same candidate (same dedup key) never creates a second row.
+     * [categoryId] pre-categorizes the payment on insert (used by historical import,
+     * where the user reviewed the category before confirming).
+     */
+    suspend fun ingest(
+        candidate: PaymentCandidate,
+        source: com.smsexpense.tracker.domain.model.PaymentSource =
+            com.smsexpense.tracker.domain.model.PaymentSource.SMS_REALTIME,
+        categoryId: Long? = null,
+    ): IngestResult
+
+    /** Which of these dedup keys already exist in the database. */
+    suspend fun existingDedupKeys(keys: Collection<String>): Set<String>
+
+    /** Cross-source duplicate guard (SMSC vs inbox timestamps differ for the same SMS). */
+    suspend fun hasSimilar(sender: String, message: String, amount: Double, timestamp: Long, windowMs: Long): Boolean
     suspend fun getById(id: Long): Payment?
     fun observeById(id: Long): Flow<Payment?>
     fun observeMonth(year: Int, month: Int): Flow<List<Payment>>
@@ -49,12 +64,19 @@ data class ApiSettings(
     val authToken: String,
 )
 
+interface ImportHistoryRepository {
+    suspend fun record(fromDate: Long, toDate: Long, count: Int, total: Double, currency: String)
+    fun observeAll(): kotlinx.coroutines.flow.Flow<List<com.smsexpense.tracker.domain.model.ImportRecord>>
+}
+
 interface SettingsRepository {
     val senderIds: Flow<Set<String>>
     val defaultCurrency: Flow<String>
     val confidenceThreshold: Flow<Float>
     val bubbleSettings: Flow<BubbleSettings>
     val apiSettings: Flow<ApiSettings>
+    /** First-run setup wizard finished (or skipped). */
+    val setupCompleted: Flow<Boolean>
 
     suspend fun addSenderId(id: String)
     suspend fun removeSenderId(id: String)
@@ -66,4 +88,5 @@ interface SettingsRepository {
     suspend fun setApiEnabled(enabled: Boolean)
     suspend fun setApiBaseUrl(url: String)
     suspend fun setApiAuthToken(token: String)
+    suspend fun setSetupCompleted(completed: Boolean)
 }

@@ -5,6 +5,7 @@ import com.smsexpense.tracker.domain.model.CategoryTotal
 import com.smsexpense.tracker.domain.model.MonthlyStats
 import com.smsexpense.tracker.domain.model.Payment
 import com.smsexpense.tracker.domain.model.PaymentCandidate
+import com.smsexpense.tracker.domain.model.PaymentSource
 import com.smsexpense.tracker.domain.model.PaymentStatus
 import com.smsexpense.tracker.domain.model.SyncStatus
 import com.smsexpense.tracker.domain.parser.DedupKey
@@ -25,7 +26,11 @@ class FakePaymentRepository : PaymentRepository {
 
     fun all(): List<Payment> = payments.value
 
-    override suspend fun ingest(candidate: PaymentCandidate): IngestResult {
+    override suspend fun ingest(
+        candidate: PaymentCandidate,
+        source: PaymentSource,
+        categoryId: Long?,
+    ): IngestResult {
         val key = DedupKey.of(candidate)
         if (!keys.add(key)) return IngestResult.Duplicate
         val payment = Payment(
@@ -33,17 +38,34 @@ class FakePaymentRepository : PaymentRepository {
             amount = candidate.amount,
             currency = candidate.currency,
             merchant = candidate.merchant,
-            categoryId = null,
+            categoryId = categoryId,
             sender = candidate.sender,
             originalMessage = candidate.originalMessage,
             timestamp = candidate.timestamp,
-            status = PaymentStatus.UNCATEGORIZED,
+            status = if (categoryId != null) PaymentStatus.CATEGORIZED else PaymentStatus.UNCATEGORIZED,
             syncStatus = SyncStatus.PENDING,
             confidence = candidate.confidence,
             createdAt = candidate.timestamp,
+            source = source,
         )
         payments.value = payments.value + payment
         return IngestResult.Inserted(payment.id)
+    }
+
+    override suspend fun existingDedupKeys(keys: Collection<String>): Set<String> =
+        keys.filter { it in this.keys }.toSet()
+
+    override suspend fun hasSimilar(
+        sender: String,
+        message: String,
+        amount: Double,
+        timestamp: Long,
+        windowMs: Long,
+    ): Boolean = payments.value.any {
+        it.sender.equals(sender, ignoreCase = true) &&
+            it.originalMessage == message &&
+            it.amount == amount &&
+            kotlin.math.abs(it.timestamp - timestamp) <= windowMs
     }
 
     override suspend fun getById(id: Long): Payment? = payments.value.find { it.id == id }
@@ -142,12 +164,14 @@ class FakeSettingsRepository(
     private val _threshold = MutableStateFlow(thresholdInitial)
     private val _bubble = MutableStateFlow(BubbleSettings(enabled = true, autoHideSeconds = 45, startY = 300))
     private val _api = MutableStateFlow(ApiSettings(enabled = false, baseUrl = "", authToken = ""))
+    private val _setupCompleted = MutableStateFlow(false)
 
     override val senderIds: Flow<Set<String>> = _senderIds
     override val defaultCurrency: Flow<String> = _currency
     override val confidenceThreshold: Flow<Float> = _threshold
     override val bubbleSettings: Flow<BubbleSettings> = _bubble
     override val apiSettings: Flow<ApiSettings> = _api
+    override val setupCompleted: Flow<Boolean> = _setupCompleted
 
     override suspend fun addSenderId(id: String) { _senderIds.value = _senderIds.value + id.trim() }
     override suspend fun removeSenderId(id: String) { _senderIds.value = _senderIds.value - id }
@@ -159,4 +183,37 @@ class FakeSettingsRepository(
     override suspend fun setApiEnabled(enabled: Boolean) { _api.value = _api.value.copy(enabled = enabled) }
     override suspend fun setApiBaseUrl(url: String) { _api.value = _api.value.copy(baseUrl = url) }
     override suspend fun setApiAuthToken(token: String) { _api.value = _api.value.copy(authToken = token) }
+    override suspend fun setSetupCompleted(completed: Boolean) { _setupCompleted.value = completed }
+}
+
+class FakeDeviceSmsSource(
+    var inbox: List<com.smsexpense.tracker.domain.model.IncomingMessage> = emptyList(),
+) : com.smsexpense.tracker.domain.source.DeviceSmsSource {
+
+    override suspend fun recentMessages(limit: Int): List<com.smsexpense.tracker.domain.source.StoredSms> =
+        inbox.sortedByDescending { it.timestamp }
+            .take(limit)
+            .map { com.smsexpense.tracker.domain.source.StoredSms(it.sender, it.body, it.timestamp) }
+
+    override suspend fun messagesBetween(from: Long, to: Long): List<com.smsexpense.tracker.domain.model.IncomingMessage> =
+        inbox.filter { it.timestamp in from..to }.sortedBy { it.timestamp }
+}
+
+class FakeImportHistoryRepository : com.smsexpense.tracker.domain.repository.ImportHistoryRepository {
+    private val records = MutableStateFlow<List<com.smsexpense.tracker.domain.model.ImportRecord>>(emptyList())
+    private var nextId = 1L
+
+    override suspend fun record(fromDate: Long, toDate: Long, count: Int, total: Double, currency: String) {
+        records.value = records.value + com.smsexpense.tracker.domain.model.ImportRecord(
+            id = nextId++,
+            importedAt = 0L,
+            fromDate = fromDate,
+            toDate = toDate,
+            transactionCount = count,
+            totalAmount = total,
+            currency = currency,
+        )
+    }
+
+    override fun observeAll(): Flow<List<com.smsexpense.tracker.domain.model.ImportRecord>> = records
 }

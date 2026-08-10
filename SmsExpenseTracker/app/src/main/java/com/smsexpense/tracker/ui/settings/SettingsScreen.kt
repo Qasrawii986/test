@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
+    onChooseFromSms: () -> Unit = {},
+    onImportHistorical: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -99,6 +101,23 @@ fun SettingsScreen(
                         Icon(Icons.Default.Add, contentDescription = "Add sender")
                     }
                 }
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onChooseFromSms,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Choose from SMS") }
+            }
+
+            // --- Historical import ---
+            SectionCard(title = "Import") {
+                Text(
+                    "Scan bank SMS already on this device and import old payments. " +
+                        "Already-imported messages are skipped automatically.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onImportHistorical,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Import Historical Transactions") }
             }
 
             // --- Currency ---

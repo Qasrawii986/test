@@ -27,6 +27,9 @@ enum class PaymentStatus { UNCATEGORIZED, CATEGORIZED }
 
 enum class SyncStatus { PENDING, SYNCED, FAILED, DISABLED }
 
+/** Where a payment entered the pipeline. */
+enum class PaymentSource { SMS_REALTIME, SMS_HISTORICAL, NOTIFICATION }
+
 data class Payment(
     val id: Long,
     val amount: Double,
@@ -40,6 +43,18 @@ data class Payment(
     val syncStatus: SyncStatus,
     val confidence: Float,
     val createdAt: Long,
+    val source: PaymentSource = PaymentSource.SMS_REALTIME,
+)
+
+/** One row in the import history log. */
+data class ImportRecord(
+    val id: Long,
+    val importedAt: Long,
+    val fromDate: Long,
+    val toDate: Long,
+    val transactionCount: Int,
+    val totalAmount: Double,
+    val currency: String,
 )
 
 data class Category(

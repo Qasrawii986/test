@@ -81,6 +81,45 @@ Your card was charged 18.50 JOD
 Salary/transfer/deposit/OTP/refund messages are recognized as **not** payments
 (negative signals). The confidence threshold is adjustable in Settings → Parsing.
 
+## Choosing the Sender ID from your SMS (v1.1)
+
+Besides typing the Sender ID manually, **Settings → Bank Sender IDs → Choose
+from SMS** opens an in-app picker over your device inbox: search, multi-select
+messages, and the distinct sender IDs are extracted. If the selection spans
+several senders, you confirm which ones to keep before anything is added.
+
+> Android note: there is **no system "pick an SMS" intent** (unlike the contacts
+> picker), so an in-app list backed by the `READ_SMS` permission and the
+> Telephony content provider is the only supported way to do this. The
+> permission is requested only when you open this feature.
+
+## Historical import (v1.1)
+
+**Settings → Import → Import Historical Transactions** (also offered during
+first-run setup, and always skippable):
+
+1. Pick the bank sender(s) and a period — presets (last month / 3 / 6 / 12) or
+   custom From/To dates.
+2. **Scan SMS** reads the inbox in the background with live progress
+   (messages scanned / transactions found). The scan uses the **exact same
+   parser, confidence threshold and dedup key** as the realtime receiver.
+3. **Review screen**: everything is selected by default; toggle rows,
+   Select All / Deselect All, edit each transaction's category, or use
+   **Set Category** to bulk-assign the selected rows. The bar shows the
+   selected count and total.
+4. **Import Selected** asks for confirmation, then saves to Room. Imported
+   payments join the dashboard, monthly stats, category totals and the normal
+   sync queue (`syncStatus = PENDING`).
+
+Re-importing the same period is **idempotent**: exact duplicates are blocked by
+the dedup key's unique index, and messages already captured live by the
+receiver are also skipped via a same-sender+body+amount match within ±12h
+(the SMSC timestamp on a received SMS differs slightly from the inbox
+timestamp). Each successful import is recorded in **Import History**.
+
+The daily flow (SMS → bubble → one tap) is untouched — historical review never
+appears for new incoming messages.
+
 ## Server sync (optional, off by default)
 
 The app is **offline-first**: Room is the source of truth and nothing requires
@@ -154,7 +193,7 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 
 ## Tests
 
-69 unit tests run on the JVM (no device needed):
+91 unit tests run on the JVM (no device needed):
 
 - `SmsParserTest` — Arabic/English payments, currencies, decimal separators,
   Arabic-Indic digits, multipart bodies, merchants, salary/transfer/OTP/refund
@@ -165,6 +204,13 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 - `IngestPaymentMessageUseCaseTest` — sender filter, threshold, duplicates,
   default currency fallback.
 - `SyncPaymentsUseCaseTest`, `DashboardViewModelTest`
+- `ImportHistoricalTransactionsUseCaseTest` — date/sender filtering, parser
+  reuse, default currency, import + history record, **re-import of the same
+  period yields 0 new rows**, cross-source timestamp-drift dedup.
+- `SenderPickerViewModelTest` — single/multi sender extraction, confirmation
+  flow, no duplicate sender IDs.
+- `HistoricalImportViewModelTest` — selection, select-all toggle, bulk
+  category, per-item category, confirmation, sync hook.
 - `MainFlowTest` (androidTest) — full UI flow on a device: create category →
   simulate payment → categorize → dashboard updates.
 

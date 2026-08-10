@@ -140,6 +140,47 @@ class PaymentDaoTest {
     }
 
     @Test
+    fun `existingDedupKeys returns only keys present`() = runTest {
+        db.paymentDao().insertIgnoring(payment(dedupKey = "k1"))
+        db.paymentDao().insertIgnoring(payment(dedupKey = "k2"))
+        val found = db.paymentDao().existingDedupKeys(listOf("k1", "k2", "k3"))
+        assertEquals(setOf("k1", "k2"), found.toSet())
+    }
+
+    @Test
+    fun `countSimilar matches same payment within window regardless of exact timestamp`() = runTest {
+        val ts = epochOf(2026, 8, 9)
+        db.paymentDao().insertIgnoring(payment(amount = 12.5, timestamp = ts))
+        val oneHour = 60 * 60 * 1000L
+        assertEquals(1, db.paymentDao().countSimilar("mybank", "msg", 12.5, ts + oneHour, 12 * oneHour))
+        assertEquals(0, db.paymentDao().countSimilar("MYBANK", "msg", 12.5, ts + 24 * oneHour, 12 * oneHour))
+        assertEquals(0, db.paymentDao().countSimilar("MYBANK", "other msg", 12.5, ts, 12 * oneHour))
+    }
+
+    @Test
+    fun `source column defaults to realtime and stores historical`() = runTest {
+        val realtime = db.paymentDao().insertIgnoring(payment(dedupKey = "r1"))
+        val historical = db.paymentDao().insertIgnoring(
+            payment(dedupKey = "h1").copy(source = "SMS_HISTORICAL")
+        )
+        assertEquals("SMS_REALTIME", db.paymentDao().getById(realtime)!!.source)
+        assertEquals("SMS_HISTORICAL", db.paymentDao().getById(historical)!!.source)
+    }
+
+    @Test
+    fun `import history insert and read back`() = runTest {
+        db.importHistoryDao().insert(
+            com.smsexpense.tracker.data.local.entity.ImportHistoryEntity(
+                importedAt = 1L, fromDate = 0L, toDate = 2L,
+                transactionCount = 37, totalAmount = 1245.5, currency = "JOD",
+            )
+        )
+        val records = db.importHistoryDao().observeAll().first()
+        assertEquals(1, records.size)
+        assertEquals(37, records.single().transactionCount)
+    }
+
+    @Test
     fun `clearAll empties the table`() = runTest {
         db.paymentDao().insertIgnoring(payment())
         db.paymentDao().clearAll()
