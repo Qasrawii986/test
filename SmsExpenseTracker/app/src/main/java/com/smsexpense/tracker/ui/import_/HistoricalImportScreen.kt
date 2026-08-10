@@ -72,6 +72,10 @@ fun HistoricalImportScreen(
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
 
+    // True immersive full screen for this screen only: the system navigation bar
+    // is hidden while this composable is shown and restored on exit.
+    com.smsexpense.tracker.ui.components.ImmersiveEffect()
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> viewModel.onPermissionResult(granted) }
