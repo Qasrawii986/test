@@ -42,8 +42,8 @@ android {
         applicationId = "com.smsexpense.tracker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.4.0"
+        versionCode = 7
+        versionName = "1.4.1"
 
         // Where the in-app updater looks for new releases (public repo: no auth needed).
         buildConfigField("String", "UPDATE_OWNER", "\"Qasrawii986\"")

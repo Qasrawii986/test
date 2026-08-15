@@ -254,12 +254,17 @@ class BubbleService : Service() {
     private fun isOverTrash(params: WindowManager.LayoutParams): Boolean {
         val (width, height) = screenSize()
         if (width == 0 || height == 0) return false
-        val bubbleCenterX = params.x + BUBBLE_SIZE_PX / 2
-        val bubbleCenterY = params.y + BUBBLE_SIZE_PX / 2
+        val half = bubbleSizePx() / 2
+        val bubbleCenterX = params.x + half
+        val bubbleCenterY = params.y + half
         val inBottomBand = bubbleCenterY > height * 0.8f
         val inCentreBand = bubbleCenterX > width * 0.25f && bubbleCenterX < width * 0.75f
         return inBottomBand && inCentreBand
     }
+
+    /** The collapsed bubble is 64.dp; convert per-device instead of assuming a density. */
+    private fun bubbleSizePx(): Int =
+        (COLLAPSED_BUBBLE_DP * resources.displayMetrics.density).toInt()
 
     private fun screenSize(): Pair<Int, Int> {
         val wm = windowManager ?: return 0 to 0
@@ -406,7 +411,7 @@ class BubbleService : Service() {
         const val EXTRA_PAYMENT_ID = "payment_id"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bubble"
-        /** Matches the 64.dp collapsed bubble; used for trash hit-testing. */
-        private const val BUBBLE_SIZE_PX = 180
+        /** Matches CollapsedBubble's size in BubbleOverlay; used for trash hit-testing. */
+        private const val COLLAPSED_BUBBLE_DP = 64
     }
 }
