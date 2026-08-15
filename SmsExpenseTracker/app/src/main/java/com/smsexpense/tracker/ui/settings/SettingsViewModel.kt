@@ -18,6 +18,7 @@ data class SettingsUiState(
     val confidenceThreshold: Float = 0.5f,
     val bubble: BubbleSettings = BubbleSettings(enabled = true, autoHideSeconds = 45, startY = 300),
     val api: ApiSettings = ApiSettings(enabled = false, baseUrl = "", authToken = ""),
+    val lastBubbleStatus: String = "",
 )
 
 class SettingsViewModel(
@@ -30,14 +31,17 @@ class SettingsViewModel(
         settings.confidenceThreshold,
         settings.bubbleSettings,
         settings.apiSettings,
-    ) { senders, currency, threshold, bubble, api ->
+        settings.lastBubbleStatus,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
         SettingsUiState(
             loading = false,
-            senderIds = senders.sorted(),
-            defaultCurrency = currency,
-            confidenceThreshold = threshold,
-            bubble = bubble,
-            api = api,
+            senderIds = (values[0] as Set<String>).sorted(),
+            defaultCurrency = values[1] as String,
+            confidenceThreshold = values[2] as Float,
+            bubble = values[3] as com.smsexpense.tracker.domain.repository.BubbleSettings,
+            api = values[4] as ApiSettings,
+            lastBubbleStatus = values[5] as String,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 

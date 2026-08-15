@@ -20,7 +20,10 @@ import kotlinx.coroutines.flow.first
  */
 object BubbleLauncher {
 
-    suspend fun launchIfPossible(context: Context, paymentId: Long): BubbleBlocker {
+    suspend fun launchIfPossible(context: Context, paymentId: Long): BubbleBlocker =
+        record(context, attempt(context, paymentId))
+
+    private suspend fun attempt(context: Context, paymentId: Long): BubbleBlocker {
         val settings = context.appContainer().settingsRepository.bubbleSettings.first()
         if (!settings.enabled) {
             AppLog.d("Bubble disabled in settings; payment stays uncategorized")
@@ -43,5 +46,16 @@ object BubbleLauncher {
             }
             BubbleBlocker.START_NOT_ALLOWED
         }
+    }
+
+    /** Persisted so Settings can explain what happened on the last payment. */
+    private suspend fun record(context: Context, blocker: BubbleBlocker): BubbleBlocker {
+        val status = if (blocker == BubbleBlocker.NONE) {
+            "Bubble shown"
+        } else {
+            "Bubble blocked — ${blocker.name}"
+        }
+        runCatching { context.appContainer().settingsRepository.setLastBubbleStatus(status) }
+        return blocker
     }
 }

@@ -65,6 +65,16 @@
             android:name=".service.notification.CategorizeActionReceiver"
             android:exported="false" />
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- WorkManager: default initializer is fine; SyncWorker is scheduled from SyncScheduler. -->
     </application>
 

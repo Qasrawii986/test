@@ -185,6 +185,12 @@ fun UpdateScreen(
                             Text(stage.message, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
+                    if (viewModel.hasDownloadedApk()) {
+                        Button(
+                            onClick = viewModel::installViaSystemInstaller,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Install with system installer") }
+                    }
                     OutlinedButton(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
                         Text("Try again")
                     }

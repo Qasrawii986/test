@@ -29,6 +29,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val API_BASE_URL = stringPreferencesKey("api_base_url")
         val API_AUTH_TOKEN = stringPreferencesKey("api_auth_token")
         val SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
+        val LAST_BUBBLE_STATUS = stringPreferencesKey("last_bubble_status")
     }
 
     override val senderIds: Flow<Set<String>> =
@@ -61,6 +62,13 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setSetupCompleted(completed: Boolean) {
         context.dataStore.edit { it[Keys.SETUP_COMPLETED] = completed }
+    }
+
+    override val lastBubbleStatus: Flow<String> =
+        context.dataStore.data.map { it[Keys.LAST_BUBBLE_STATUS] ?: "" }
+
+    override suspend fun setLastBubbleStatus(status: String) {
+        context.dataStore.edit { it[Keys.LAST_BUBBLE_STATUS] = status }
     }
 
     override suspend fun addSenderId(id: String) {

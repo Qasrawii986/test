@@ -77,6 +77,8 @@ interface SettingsRepository {
     val apiSettings: Flow<ApiSettings>
     /** First-run setup wizard finished (or skipped). */
     val setupCompleted: Flow<Boolean>
+    /** Why the last detected payment did or did not raise a bubble (diagnostics). */
+    val lastBubbleStatus: Flow<String>
 
     suspend fun addSenderId(id: String)
     suspend fun removeSenderId(id: String)
@@ -89,4 +91,5 @@ interface SettingsRepository {
     suspend fun setApiBaseUrl(url: String)
     suspend fun setApiAuthToken(token: String)
     suspend fun setSetupCompleted(completed: Boolean)
+    suspend fun setLastBubbleStatus(status: String)
 }

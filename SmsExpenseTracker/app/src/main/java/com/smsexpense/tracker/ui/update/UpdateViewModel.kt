@@ -9,6 +9,7 @@ import com.smsexpense.tracker.domain.model.UpdateInfo
 import com.smsexpense.tracker.domain.usecase.CheckForUpdateUseCase
 import com.smsexpense.tracker.service.update.ApkInstaller
 import com.smsexpense.tracker.service.update.InstallResultReceiver
+import com.smsexpense.tracker.util.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ class UpdateViewModel(
     val uiState: StateFlow<UpdateUiState> = _uiState
 
     private var downloadedApk: File? = null
+    private var fallbackAttempted = false
 
     fun refreshInstallPermission() {
         _uiState.value = _uiState.value.copy(
@@ -79,6 +81,7 @@ class UpdateViewModel(
                     _uiState.value = _uiState.value.copy(stage = UpdateStage.Downloading(progress))
                 }
                 downloadedApk = target
+                fallbackAttempted = false
                 _uiState.value = _uiState.value.copy(stage = UpdateStage.ReadyToInstall(info))
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -104,11 +107,35 @@ class UpdateViewModel(
         }
     }
 
-    /** Called when returning to the screen: surfaces a failure reported by the session. */
+    /**
+     * A session can also fail asynchronously (the commit succeeds, then the
+     * platform reports an error) — that is how OEM self-update restrictions
+     * surface. Retry once through the system installer activity before giving up.
+     */
     fun consumeSessionError() {
-        InstallResultReceiver.lastError?.let { message ->
-            InstallResultReceiver.lastError = null
-            _uiState.value = _uiState.value.copy(stage = UpdateStage.Error(message))
+        val message = InstallResultReceiver.lastError ?: return
+        InstallResultReceiver.lastError = null
+        val apk = downloadedApk
+        if (apk != null && !fallbackAttempted) {
+            fallbackAttempted = true
+            if (ApkInstaller.openWithSystemInstaller(getApplication(), apk)) {
+                AppLog.d("Session install rejected; handed APK to the system installer")
+                return
+            }
+        }
+        _uiState.value = _uiState.value.copy(stage = UpdateStage.Error(message))
+    }
+
+    /** Explicit escape hatch shown on the error state. */
+    fun installViaSystemInstaller() {
+        val apk = downloadedApk ?: return
+        if (!ApkInstaller.openWithSystemInstaller(getApplication(), apk)) {
+            _uiState.value = _uiState.value.copy(
+                stage = UpdateStage.Error("Could not open the system installer")
+            )
         }
     }
+
+    /** True once the downloaded APK exists, enabling the manual install button. */
+    fun hasDownloadedApk(): Boolean = downloadedApk?.exists() == true
 }

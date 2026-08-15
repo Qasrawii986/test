@@ -45,9 +45,13 @@ object ApkInstaller {
             ).apply {
                 setAppPackageName(context.packageName)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    // Ask for an unattended update where the platform allows it; the
-                    // system still falls back to a confirmation dialog when it doesn't.
-                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+                    // Must be USER_ACTION_REQUIRED. Unattended self-update additionally
+                    // demands that this app be its own installer of record and hold
+                    // UPDATE_PACKAGES_WITHOUT_USER_ACTION; a sideloaded app satisfies
+                    // neither, and asking for it makes the platform abort the session
+                    // ("Self update is blocked by unknown source package") instead of
+                    // falling back to the confirmation dialog we actually want.
+                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
                 }
             }
             sessionId = installer.createSession(params)
@@ -66,8 +70,31 @@ object ApkInstaller {
         } catch (e: Exception) {
             AppLog.e("APK install failed", e)
             if (sessionId != -1) runCatching { installer.abandonSession(sessionId) }
-            "Install failed: ${e.message ?: e.javaClass.simpleName}"
+            // Some OEM installers (notably Samsung) reject the session path for
+            // self-updates; hand the APK to the system installer activity instead.
+            if (openWithSystemInstaller(context, apk)) null
+            else "Install failed: ${e.message ?: e.javaClass.simpleName}"
         }
+    }
+
+    /**
+     * Legacy fallback: launch the system package-installer activity on a
+     * FileProvider URI. Deprecated in favour of the session API but still the
+     * most widely compatible path when a session is refused.
+     */
+    fun openWithSystemInstaller(context: Context, apk: File): Boolean = try {
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context, "${context.packageName}.updates", apk,
+        )
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        true
+    } catch (e: Exception) {
+        AppLog.e("System installer fallback failed", e)
+        false
     }
 
     private const val WRITE_NAME = "app-update.apk"

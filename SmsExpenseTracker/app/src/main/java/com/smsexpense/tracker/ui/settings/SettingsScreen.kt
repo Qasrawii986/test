@@ -75,7 +75,7 @@ fun SettingsScreen(
         ) {
             // --- Live permission status: makes a missing permission obvious
             // instead of the bubble just never appearing. ---
-            PermissionStatusCard()
+            PermissionStatusCard(lastBubbleStatus = state.lastBubbleStatus)
 
             // --- Bank sender IDs ---
             SectionCard(title = "Bank Sender IDs") {
@@ -250,7 +250,7 @@ private const val DEBUG_UNLOCK_TAPS = 7
  * time the app is reinstalled, which silently disables the bubble.
  */
 @Composable
-private fun PermissionStatusCard() {
+private fun PermissionStatusCard(lastBubbleStatus: String) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var permissions by remember {
@@ -306,6 +306,13 @@ private fun PermissionStatusCard() {
                     "shown as a notification you can categorize.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
+            )
+        }
+        if (lastBubbleStatus.isNotBlank()) {
+            Text(
+                "Last payment: $lastBubbleStatus",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
