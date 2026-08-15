@@ -32,15 +32,65 @@ Incoming SMS → BroadcastReceiver → merge multipart parts → IngestPaymentMe
 ./gradlew :app:connectedDebugAndroidTest  # UI tests (needs device/emulator)
 ```
 
-## Release APK
+## Release APK & signing
 
 ```bash
 ./gradlew :app:assembleRelease
 ```
 
-The output is **unsigned**. For sideloading, either add a `signingConfig` in
-`app/build.gradle.kts` or sign manually with `apksigner`. Debug APKs are signed
-automatically with the debug key and install directly.
+Releases are signed with a **stable key** so the app can update itself in place —
+Android refuses to update an installed app with a differently-signed APK, and a
+debug keystore is regenerated per machine, which would force an uninstall (and
+data loss) on every rebuild.
+
+- `signing/release.jks.gpg` — the keystore, GPG-encrypted (safe for a public repo).
+- `signing/release.jks` + `signing/keystore.properties` — plaintext, git-ignored.
+- CI decrypts the keystore with the `KEYSTORE_PASSPHRASE` repository secret.
+
+To build a signed release locally:
+
+```bash
+gpg --batch --yes --decrypt --passphrase "$KEYSTORE_PASSPHRASE" \
+  --output signing/release.jks signing/release.jks.gpg
+printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=smsexpense\nstoreFile=signing/release.jks\n' \
+  "$KEYSTORE_PASSPHRASE" "$KEYSTORE_PASSPHRASE" > signing/keystore.properties
+./gradlew :app:assembleRelease
+```
+
+Without the keystore the release build still works — it falls back to debug
+signing (fine for local testing, not for updating an installed copy).
+
+## Automatic builds & in-app updates
+
+`.github/workflows/android-release.yml` runs on every push that touches this
+project: it runs the unit tests, builds a signed release APK, and publishes a
+GitHub Release with two fixed-name assets. Fixed names keep these URLs valid
+forever:
+
+```
+https://github.com/<owner>/<repo>/releases/latest/download/update.json
+https://github.com/<owner>/<repo>/releases/latest/download/app-release.apk
+```
+
+**Settings → About → Check for updates** reads `update.json`, compares
+`versionCode` with the running build, downloads the APK, and installs it through
+the `PackageInstaller` session API (`ACTION_INSTALL_PACKAGE` has been deprecated
+since API 29; the session API also avoids needing a FileProvider). The app
+requests `REQUEST_INSTALL_PACKAGES`, and the user grants "install unknown apps"
+once. Android always shows its own install confirmation — that is mandatory for
+a non-system app.
+
+One-time repository setup: add a secret named `KEYSTORE_PASSPHRASE`
+(Settings → Secrets and variables → Actions) holding the keystore passphrase.
+
+To publish a new version, bump `versionCode` **and** `versionName` in
+`app/build.gradle.kts` and push — the workflow tags `v<versionName>` and
+replaces the release if that tag already exists.
+
+### Developer screen in release builds
+
+`BuildConfig.DEBUG` is false in release, so the debug icon is hidden. Tap the
+version line in **Settings → About** seven times to open the developer screen.
 
 ## First-run setup (on the phone)
 

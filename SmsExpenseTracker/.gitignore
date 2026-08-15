@@ -6,5 +6,13 @@ local.properties
 .DS_Store
 build/
 captures/
+# Signing: only the GPG-encrypted keystore is committed.
+signing/release.jks
+signing/keystore.properties
+
+# The repository-root .gitignore belongs to an unrelated legacy project and
+# ignores any directory named "data/", which silently excluded this project's
+# entire data layer (Room, DAOs, repositories, API clients). Re-include it.
+!app/src/main/java/com/smsexpense/tracker/data/
 .externalNativeBuild/
 .cxx/

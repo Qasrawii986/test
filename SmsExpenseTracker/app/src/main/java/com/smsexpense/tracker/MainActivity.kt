@@ -154,6 +154,26 @@ class MainActivity : ComponentActivity() {
                     onBack = { navController.popBackStack() },
                     onChooseFromSms = { navController.navigate("senderPicker") },
                     onImportHistorical = { navController.navigate("historicalImport") },
+                    onOpenUpdates = { navController.navigate("updates") },
+                    onDebugUnlocked = { navController.navigate("debug") },
+                    versionLabel = "Version ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})",
+                )
+            }
+            composable("updates") {
+                val vm: com.smsexpense.tracker.ui.update.UpdateViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.update.UpdateViewModel(
+                            application = application,
+                            api = container.updateApi,
+                            checkForUpdate = container.checkForUpdate,
+                            currentVersionName = BuildConfig.VERSION_NAME,
+                            currentVersionCode = BuildConfig.VERSION_CODE,
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.update.UpdateScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("senderPicker") {

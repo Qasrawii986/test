@@ -71,6 +71,21 @@ class AppContainer(private val app: Application) {
     val syncPayments: SyncPaymentsUseCase by lazy {
         SyncPaymentsUseCase(paymentRepository, categoryRepository, apiClient)
     }
+
+    val updateApi: com.smsexpense.tracker.data.remote.api.UpdateApi by lazy {
+        com.smsexpense.tracker.data.remote.api.GithubUpdateApi(
+            owner = BuildConfig.UPDATE_OWNER,
+            repo = BuildConfig.UPDATE_REPO,
+        )
+    }
+
+    val checkForUpdate: com.smsexpense.tracker.domain.usecase.CheckForUpdateUseCase by lazy {
+        com.smsexpense.tracker.domain.usecase.CheckForUpdateUseCase(
+            api = updateApi,
+            currentVersionCode = BuildConfig.VERSION_CODE,
+            currentVersionName = BuildConfig.VERSION_NAME,
+        )
+    }
 }
 
 class SmsExpenseApp : Application() {

@@ -1,5 +1,6 @@
 package com.smsexpense.tracker.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,9 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onChooseFromSms: () -> Unit = {},
     onImportHistorical: () -> Unit = {},
+    onOpenUpdates: () -> Unit = {},
+    onDebugUnlocked: () -> Unit = {},
+    versionLabel: String = "",
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -206,10 +210,33 @@ fun SettingsScreen(
                     }) { Text("Save server settings") }
                 }
             }
+
+            // --- Updates + about ---
+            SectionCard(title = "About") {
+                var taps by remember { mutableStateOf(0) }
+                Text(
+                    text = versionLabel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable {
+                        taps++
+                        if (taps >= DEBUG_UNLOCK_TAPS) {
+                            taps = 0
+                            onDebugUnlocked()
+                        }
+                    },
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onOpenUpdates,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Check for updates") }
+            }
             Spacer(Modifier)
         }
     }
 }
+
+/** Taps on the version label that reveal the developer screen in release builds. */
+private const val DEBUG_UNLOCK_TAPS = 7
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
