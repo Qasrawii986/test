@@ -27,6 +27,7 @@ import com.smsexpense.tracker.appContainer
 import com.smsexpense.tracker.domain.model.Category
 import com.smsexpense.tracker.domain.model.Payment
 import com.smsexpense.tracker.domain.model.PaymentStatus
+import com.smsexpense.tracker.service.notification.PaymentNotifier
 import com.smsexpense.tracker.service.sync.SyncScheduler
 import com.smsexpense.tracker.util.AppLog
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +54,12 @@ class BubbleService : Service() {
     private var overlayView: ComposeView? = null
     private var viewOwner: OverlayViewOwner? = null
     private var layoutParams: WindowManager.LayoutParams? = null
+
+    // Drag-to-dismiss target (separate overlay window pinned to the bottom).
+    private var trashView: ComposeView? = null
+    private var trashOwner: OverlayViewOwner? = null
+    internal val trashVisible = MutableStateFlow(false)
+    internal val trashActive = MutableStateFlow(false)
 
     private val queue = ArrayDeque<Long>()
     internal val currentPayment = MutableStateFlow<Payment?>(null)
@@ -137,7 +144,15 @@ class BubbleService : Service() {
         autoHideJob = serviceScope.launch {
             val seconds = container.settingsRepository.bubbleSettings.first().autoHideSeconds
             delay(seconds * 1000L)
-            // Timeout: leave the payment UNCATEGORIZED and move on.
+            // Timeout: leave the payment UNCATEGORIZED, but leave a notification
+            // behind so it is never silently forgotten.
+            currentPayment.value?.let { payment ->
+                runCatching {
+                    PaymentNotifier.notifyUncategorized(
+                        this@BubbleService, payment, categories.value,
+                    )
+                }
+            }
             showNext()
         }
     }
@@ -182,7 +197,8 @@ class BubbleService : Service() {
                     queuedCountFlow = queuedCount,
                     onTap = ::onBubbleTapped,
                     onDrag = ::moveBubbleBy,
-                    onDragEnd = ::persistBubblePosition,
+                    onDragStart = ::onDragStarted,
+                    onDragEnd = ::onDragFinished,
                     onCategorySelected = ::onCategorySelected,
                     onDismiss = ::onDismissed,
                     onCollapse = { expanded.value = false },
@@ -214,6 +230,98 @@ class BubbleService : Service() {
         } catch (e: Exception) {
             AppLog.w("updateViewLayout failed", e)
         }
+        trashActive.value = isOverTrash(params)
+    }
+
+    private fun onDragStarted() {
+        autoHideJob?.cancel() // don't vanish mid-drag
+        showTrashTarget()
+    }
+
+    private fun onDragFinished() {
+        val droppedOnTrash = trashActive.value
+        hideTrashTarget()
+        if (droppedOnTrash) {
+            // Same outcome as "Later": keep the payment, drop the bubble.
+            onDismissed()
+        } else {
+            persistBubblePosition()
+            startAutoHideTimer()
+        }
+    }
+
+    /** Bottom-centre hot zone: the lower sixth of the screen, middle half horizontally. */
+    private fun isOverTrash(params: WindowManager.LayoutParams): Boolean {
+        val (width, height) = screenSize()
+        if (width == 0 || height == 0) return false
+        val bubbleCenterX = params.x + BUBBLE_SIZE_PX / 2
+        val bubbleCenterY = params.y + BUBBLE_SIZE_PX / 2
+        val inBottomBand = bubbleCenterY > height * 0.8f
+        val inCentreBand = bubbleCenterX > width * 0.25f && bubbleCenterX < width * 0.75f
+        return inBottomBand && inCentreBand
+    }
+
+    private fun screenSize(): Pair<Int, Int> {
+        val wm = windowManager ?: return 0 to 0
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = wm.currentWindowMetrics.bounds
+            bounds.width() to bounds.height()
+        } else {
+            @Suppress("DEPRECATION")
+            val metrics = android.util.DisplayMetrics().also { wm.defaultDisplay.getRealMetrics(it) }
+            metrics.widthPixels to metrics.heightPixels
+        }
+    }
+
+    private fun showTrashTarget() {
+        if (trashView != null) {
+            trashVisible.value = true
+            return
+        }
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            PixelFormat.TRANSLUCENT,
+        ).apply { gravity = Gravity.BOTTOM }
+
+        val owner = OverlayViewOwner().also { it.create() }
+        val view = ComposeView(this).apply {
+            setViewTreeLifecycleOwner(owner)
+            setViewTreeViewModelStoreOwner(owner)
+            setViewTreeSavedStateRegistryOwner(owner)
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            setContent { TrashTarget(visibleFlow = trashVisible, activeFlow = trashActive) }
+        }
+        trashVisible.value = true
+        trashActive.value = false
+        try {
+            windowManager?.addView(view, params)
+            trashView = view
+            trashOwner = owner
+        } catch (e: Exception) {
+            AppLog.w("Could not show trash target", e)
+            owner.destroy()
+            trashVisible.value = false
+        }
+    }
+
+    private fun hideTrashTarget() {
+        trashVisible.value = false
+        trashActive.value = false
+        trashView?.let { view ->
+            try {
+                windowManager?.removeViewImmediate(view)
+            } catch (e: Exception) {
+                AppLog.w("removing trash target failed", e)
+            }
+        }
+        trashView = null
+        trashOwner?.destroy()
+        trashOwner = null
     }
 
     private fun persistBubblePosition() {
@@ -228,6 +336,7 @@ class BubbleService : Service() {
         serviceScope.launch {
             try {
                 container.paymentRepository.categorize(payment.id, categoryId)
+                PaymentNotifier.cancel(this@BubbleService, payment.id)
                 SyncScheduler.scheduleIfEnabled(this@BubbleService)
             } catch (e: Exception) {
                 AppLog.e("Failed to categorize payment ${payment.id}", e)
@@ -260,6 +369,7 @@ class BubbleService : Service() {
 
     override fun onDestroy() {
         autoHideJob?.cancel()
+        hideTrashTarget()
         removeOverlay()
         serviceScope.cancel()
         super.onDestroy()
@@ -296,5 +406,7 @@ class BubbleService : Service() {
         const val EXTRA_PAYMENT_ID = "payment_id"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bubble"
+        /** Matches the 64.dp collapsed bubble; used for trash hit-testing. */
+        private const val BUBBLE_SIZE_PX = 180
     }
 }

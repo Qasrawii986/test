@@ -7,7 +7,9 @@ import android.provider.Telephony
 import com.smsexpense.tracker.appContainer
 import com.smsexpense.tracker.domain.model.IncomingMessage
 import com.smsexpense.tracker.domain.usecase.IngestOutcome
+import com.smsexpense.tracker.service.bubble.BubbleBlocker
 import com.smsexpense.tracker.service.bubble.BubbleLauncher
+import com.smsexpense.tracker.service.notification.PaymentNotifier
 import com.smsexpense.tracker.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,7 +41,12 @@ class SmsReceiver : BroadcastReceiver() {
                     when (val outcome = container.ingestPaymentMessage(message)) {
                         is IngestOutcome.PaymentSaved -> {
                             AppLog.d("Payment saved id=${outcome.paymentId} confidence=${outcome.confidence}")
-                            BubbleLauncher.launchIfPossible(context, outcome.paymentId)
+                            val blocker = BubbleLauncher.launchIfPossible(context, outcome.paymentId)
+                            if (blocker != BubbleBlocker.NONE) {
+                                // Never drop a payment silently: fall back to a
+                                // notification carrying one-tap category actions.
+                                notifyFallback(context, container, outcome.paymentId, blocker)
+                            }
                         }
                         IngestOutcome.DuplicateIgnored -> AppLog.d("Duplicate SMS ignored")
                         is IngestOutcome.NotFromBank -> AppLog.d("Ignored sender (not a configured bank)")
@@ -53,6 +60,21 @@ class SmsReceiver : BroadcastReceiver() {
             } finally {
                 pending.finish()
             }
+        }
+    }
+
+    private suspend fun notifyFallback(
+        context: Context,
+        container: com.smsexpense.tracker.AppContainer,
+        paymentId: Long,
+        blocker: BubbleBlocker,
+    ) {
+        try {
+            val payment = container.paymentRepository.getById(paymentId) ?: return
+            val categories = container.categoryRepository.getAll()
+            PaymentNotifier.notifyUncategorized(context, payment, categories, blocker)
+        } catch (e: Exception) {
+            AppLog.e("Fallback notification failed", e)
         }
     }
 

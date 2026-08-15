@@ -27,6 +27,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +73,10 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // --- Live permission status: makes a missing permission obvious
+            // instead of the bubble just never appearing. ---
+            PermissionStatusCard()
+
             // --- Bank sender IDs ---
             SectionCard(title = "Bank Sender IDs") {
                 Text(
@@ -237,6 +243,85 @@ fun SettingsScreen(
 
 /** Taps on the version label that reveal the developer screen in release builds. */
 private const val DEBUG_UNLOCK_TAPS = 7
+
+/**
+ * Shows whether each permission the app depends on is currently granted, and
+ * offers a one-tap fix. The overlay permission in particular is revoked every
+ * time the app is reinstalled, which silently disables the bubble.
+ */
+@Composable
+private fun PermissionStatusCard() {
+    val context = LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    var permissions by remember {
+        mutableStateOf(com.smsexpense.tracker.service.bubble.AppPermissions.read(context))
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                permissions = com.smsexpense.tracker.service.bubble.AppPermissions.read(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val smsLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { permissions = com.smsexpense.tracker.service.bubble.AppPermissions.read(context) }
+    val notificationLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { permissions = com.smsexpense.tracker.service.bubble.AppPermissions.read(context) }
+
+    SectionCard(title = "Permissions") {
+        PermissionRow(
+            label = "Read incoming SMS",
+            granted = permissions.sms,
+            onFix = { smsLauncher.launch(android.Manifest.permission.RECEIVE_SMS) },
+        )
+        PermissionRow(
+            label = "Display over other apps (bubble)",
+            granted = permissions.overlay,
+            onFix = {
+                context.startActivity(
+                    android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:${context.packageName}"),
+                    )
+                )
+            },
+        )
+        PermissionRow(
+            label = "Notifications",
+            granted = permissions.notifications,
+            onFix = {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            },
+        )
+        if (!permissions.overlay) {
+            Text(
+                "Without this the bubble cannot appear — payments are still saved and " +
+                    "shown as a notification you can categorize.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PermissionRow(label: String, granted: Boolean, onFix: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Text(if (granted) "✅" else "⚠️")
+        Spacer(Modifier.width(8.dp))
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        if (!granted) {
+            androidx.compose.material3.TextButton(onClick = onFix) { Text("Fix") }
+        }
+    }
+}
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {

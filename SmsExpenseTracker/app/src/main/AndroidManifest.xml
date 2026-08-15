@@ -61,6 +61,10 @@
             android:name=".service.update.InstallResultReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".service.notification.CategorizeActionReceiver"
+            android:exported="false" />
+
         <!-- WorkManager: default initializer is fine; SyncWorker is scheduled from SyncScheduler. -->
     </application>
 

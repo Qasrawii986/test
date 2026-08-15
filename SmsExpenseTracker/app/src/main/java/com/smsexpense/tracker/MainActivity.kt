@@ -43,15 +43,29 @@ import com.smsexpense.tracker.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
 
+    /** Set when launched from a payment notification, consumed once by AppRoot. */
+    private var pendingPaymentId by mutableStateOf(0L)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val container = appContainer()
+        pendingPaymentId = intent?.getLongExtra(EXTRA_OPEN_PAYMENT_ID, 0L) ?: 0L
 
         setContent {
             AppTheme {
                 AppRoot(container)
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingPaymentId = intent.getLongExtra(EXTRA_OPEN_PAYMENT_ID, 0L)
+    }
+
+    companion object {
+        const val EXTRA_OPEN_PAYMENT_ID = "open_payment_id"
     }
 
     private fun currentPermissions() = PermissionsState(
@@ -102,6 +116,14 @@ class MainActivity : ComponentActivity() {
         }
         androidx.compose.runtime.LaunchedEffect(setupNeeded) {
             if (setupNeeded == true) navController.navigate("setup")
+        }
+
+        // Opened from a payment notification: jump straight to that payment.
+        androidx.compose.runtime.LaunchedEffect(pendingPaymentId) {
+            if (pendingPaymentId > 0) {
+                navController.navigate("payment/$pendingPaymentId")
+                pendingPaymentId = 0L
+            }
         }
 
         NavHost(navController = navController, startDestination = "dashboard") {

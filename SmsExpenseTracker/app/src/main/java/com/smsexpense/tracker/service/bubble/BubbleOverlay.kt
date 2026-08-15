@@ -53,6 +53,7 @@ fun BubbleOverlay(
     onCategorySelected: (Long) -> Unit,
     onDismiss: () -> Unit,
     onCollapse: () -> Unit,
+    onDragStart: () -> Unit = {},
 ) {
     AppTheme {
         val payment by paymentFlow.collectAsState()
@@ -79,6 +80,7 @@ fun BubbleOverlay(
                 onTap = onTap,
                 onDrag = onDrag,
                 onDragEnd = onDragEnd,
+                onDragStart = onDragStart,
             )
         }
     }
@@ -91,6 +93,7 @@ private fun CollapsedBubble(
     onTap: () -> Unit,
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit,
+    onDragStart: () -> Unit = {},
 ) {
     Surface(
         shape = CircleShape,
@@ -101,11 +104,13 @@ private fun CollapsedBubble(
             .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }) }
             .pointerInput(Unit) {
                 detectDragGestures(
+                    onDragStart = { onDragStart() },
                     onDrag = { change, amount ->
                         change.consume()
                         onDrag(amount.x, amount.y)
                     },
                     onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
                 )
             },
     ) {
