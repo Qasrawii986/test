@@ -168,6 +168,18 @@ fun SettingsScreen(
                 )
             }
 
+            // --- Bubble appearance ---
+            SectionCard(title = "Bubble appearance") {
+                BubbleAppearanceControls(
+                    settings = state.bubble,
+                    onSizeChange = viewModel::setBubbleSize,
+                    onShapeChange = viewModel::setBubbleShape,
+                    onColorChange = viewModel::setBubbleColor,
+                    onOpacityChange = viewModel::setBubbleOpacity,
+                    onShowAmountChange = viewModel::setBubbleShowAmount,
+                )
+            }
+
             // --- Parsing ---
             SectionCard(title = "Parsing") {
                 Text(

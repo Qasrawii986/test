@@ -66,6 +66,11 @@ class BubbleService : Service() {
     internal val expanded = MutableStateFlow(false)
     internal val categories = MutableStateFlow<List<Category>>(emptyList())
     internal val queuedCount = MutableStateFlow(0)
+    internal val appearance = MutableStateFlow(
+        com.smsexpense.tracker.domain.repository.BubbleSettings(
+            enabled = true, autoHideSeconds = 45, startY = 300,
+        )
+    )
     private var autoHideJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -77,6 +82,10 @@ class BubbleService : Service() {
         createNotificationChannel()
         serviceScope.launch {
             container.categoryRepository.observeAll().collect { categories.value = it }
+        }
+        // Live appearance: changing size/shape/colour in settings updates the bubble.
+        serviceScope.launch {
+            container.settingsRepository.bubbleSettings.collect { appearance.value = it }
         }
     }
 
@@ -202,6 +211,7 @@ class BubbleService : Service() {
                     onCategorySelected = ::onCategorySelected,
                     onDismiss = ::onDismissed,
                     onCollapse = { expanded.value = false },
+                    appearanceFlow = appearance,
                 )
             }
         }
@@ -262,9 +272,9 @@ class BubbleService : Service() {
         return inBottomBand && inCentreBand
     }
 
-    /** The collapsed bubble is 64.dp; convert per-device instead of assuming a density. */
+    /** Uses the configured bubble size so the trash zone matches what is on screen. */
     private fun bubbleSizePx(): Int =
-        (COLLAPSED_BUBBLE_DP * resources.displayMetrics.density).toInt()
+        (appearance.value.sizeDp * resources.displayMetrics.density).toInt()
 
     private fun screenSize(): Pair<Int, Int> {
         val wm = windowManager ?: return 0 to 0
@@ -411,7 +421,5 @@ class BubbleService : Service() {
         const val EXTRA_PAYMENT_ID = "payment_id"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bubble"
-        /** Matches CollapsedBubble's size in BubbleOverlay; used for trash hit-testing. */
-        private const val COLLAPSED_BUBBLE_DP = 64
     }
 }

@@ -5,11 +5,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.smsexpense.tracker.domain.repository.ApiSettings
 import com.smsexpense.tracker.domain.repository.BubbleSettings
+import com.smsexpense.tracker.domain.repository.BubbleShape
 import com.smsexpense.tracker.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,6 +27,11 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val BUBBLE_ENABLED = booleanPreferencesKey("bubble_enabled")
         val BUBBLE_AUTO_HIDE_SECONDS = intPreferencesKey("bubble_auto_hide_seconds")
         val BUBBLE_START_Y = intPreferencesKey("bubble_start_y")
+        val BUBBLE_SIZE_DP = intPreferencesKey("bubble_size_dp")
+        val BUBBLE_SHAPE = stringPreferencesKey("bubble_shape")
+        val BUBBLE_COLOR = longPreferencesKey("bubble_color")
+        val BUBBLE_OPACITY = floatPreferencesKey("bubble_opacity")
+        val BUBBLE_SHOW_AMOUNT = booleanPreferencesKey("bubble_show_amount")
         val API_ENABLED = booleanPreferencesKey("api_enabled")
         val API_BASE_URL = stringPreferencesKey("api_base_url")
         val API_AUTH_TOKEN = stringPreferencesKey("api_auth_token")
@@ -50,6 +57,12 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             enabled = it[Keys.BUBBLE_ENABLED] ?: true,
             autoHideSeconds = it[Keys.BUBBLE_AUTO_HIDE_SECONDS] ?: 45,
             startY = it[Keys.BUBBLE_START_Y] ?: 300,
+            sizeDp = it[Keys.BUBBLE_SIZE_DP] ?: BubbleSettings.DEFAULT_SIZE_DP,
+            shape = runCatching { BubbleShape.valueOf(it[Keys.BUBBLE_SHAPE] ?: "") }
+                .getOrDefault(BubbleShape.CIRCLE),
+            colorArgb = it[Keys.BUBBLE_COLOR]?.takeIf { value -> value != 0L },
+            opacity = it[Keys.BUBBLE_OPACITY] ?: 1f,
+            showAmount = it[Keys.BUBBLE_SHOW_AMOUNT] ?: true,
         )
     }
 
@@ -139,6 +152,34 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setBubbleStartY(y: Int) {
         context.dataStore.edit { it[Keys.BUBBLE_START_Y] = y }
+    }
+
+    override suspend fun setBubbleSizeDp(sizeDp: Int) {
+        context.dataStore.edit {
+            it[Keys.BUBBLE_SIZE_DP] =
+                sizeDp.coerceIn(BubbleSettings.MIN_SIZE_DP, BubbleSettings.MAX_SIZE_DP)
+        }
+    }
+
+    override suspend fun setBubbleShape(shape: BubbleShape) {
+        context.dataStore.edit { it[Keys.BUBBLE_SHAPE] = shape.name }
+    }
+
+    override suspend fun setBubbleColor(argb: Long?) {
+        // 0 doubles as "follow the theme" so the key can simply be cleared.
+        context.dataStore.edit {
+            if (argb == null) it.remove(Keys.BUBBLE_COLOR) else it[Keys.BUBBLE_COLOR] = argb
+        }
+    }
+
+    override suspend fun setBubbleOpacity(opacity: Float) {
+        context.dataStore.edit {
+            it[Keys.BUBBLE_OPACITY] = opacity.coerceIn(BubbleSettings.MIN_OPACITY, 1f)
+        }
+    }
+
+    override suspend fun setBubbleShowAmount(show: Boolean) {
+        context.dataStore.edit { it[Keys.BUBBLE_SHOW_AMOUNT] = show }
     }
 
     override suspend fun setApiEnabled(enabled: Boolean) {

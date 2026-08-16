@@ -51,6 +51,12 @@ class SettingsViewModel(
     fun setConfidenceThreshold(value: Float) = launch { settings.setConfidenceThreshold(value) }
     fun setBubbleEnabled(enabled: Boolean) = launch { settings.setBubbleEnabled(enabled) }
     fun setBubbleAutoHide(seconds: Int) = launch { settings.setBubbleAutoHideSeconds(seconds) }
+    fun setBubbleSize(sizeDp: Int) = launch { settings.setBubbleSizeDp(sizeDp) }
+    fun setBubbleShape(shape: com.smsexpense.tracker.domain.repository.BubbleShape) =
+        launch { settings.setBubbleShape(shape) }
+    fun setBubbleColor(argb: Long?) = launch { settings.setBubbleColor(argb) }
+    fun setBubbleOpacity(opacity: Float) = launch { settings.setBubbleOpacity(opacity) }
+    fun setBubbleShowAmount(show: Boolean) = launch { settings.setBubbleShowAmount(show) }
     fun setApiEnabled(enabled: Boolean) = launch { settings.setApiEnabled(enabled) }
     fun setApiBaseUrl(url: String) = launch { settings.setApiBaseUrl(url) }
     fun setApiAuthToken(token: String) = launch { settings.setApiAuthToken(token) }

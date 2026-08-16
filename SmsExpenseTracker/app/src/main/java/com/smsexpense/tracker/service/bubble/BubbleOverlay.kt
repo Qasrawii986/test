@@ -54,6 +54,7 @@ fun BubbleOverlay(
     onDismiss: () -> Unit,
     onCollapse: () -> Unit,
     onDragStart: () -> Unit = {},
+    appearanceFlow: StateFlow<com.smsexpense.tracker.domain.repository.BubbleSettings>,
 ) {
     AppTheme {
         val payment by paymentFlow.collectAsState()
@@ -74,9 +75,11 @@ fun BubbleOverlay(
                 onDragEnd = onDragEnd,
             )
         } else {
+            val appearance by appearanceFlow.collectAsState()
             CollapsedBubble(
                 payment = current,
                 queued = queued,
+                appearance = appearance,
                 onTap = onTap,
                 onDrag = onDrag,
                 onDragEnd = onDragEnd,
@@ -90,53 +93,47 @@ fun BubbleOverlay(
 private fun CollapsedBubble(
     payment: Payment,
     queued: Int,
+    appearance: com.smsexpense.tracker.domain.repository.BubbleSettings,
     onTap: () -> Unit,
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit,
     onDragStart: () -> Unit = {},
 ) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primary,
-        shadowElevation = 6.dp,
-        modifier = Modifier
-            .size(64.dp)
-            .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }) }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { onDragStart() },
-                    onDrag = { change, amount ->
-                        change.consume()
-                        onDrag(amount.x, amount.y)
-                    },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragEnd() },
-                )
+    Box {
+        com.smsexpense.tracker.ui.components.BubbleVisual(
+            settings = appearance,
+            label = if (appearance.showAmount) {
+                formatAmount(payment.amount, payment.currency, compact = true)
+            } else {
+                "💳"
             },
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = formatAmount(payment.amount, payment.currency, compact = true),
-                color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-            )
-            if (queued > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(16.dp)
-                        .background(MaterialTheme.colorScheme.error, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "${queued + 1}",
-                        color = MaterialTheme.colorScheme.onError,
-                        style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier
+                .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }) }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { onDragStart() },
+                        onDrag = { change, amount ->
+                            change.consume()
+                            onDrag(amount.x, amount.y)
+                        },
+                        onDragEnd = { onDragEnd() },
+                        onDragCancel = { onDragEnd() },
                     )
-                }
+                },
+        )
+        if (queued > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(18.dp)
+                    .background(MaterialTheme.colorScheme.error, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "${queued + 1}",
+                    color = MaterialTheme.colorScheme.onError,
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
     }

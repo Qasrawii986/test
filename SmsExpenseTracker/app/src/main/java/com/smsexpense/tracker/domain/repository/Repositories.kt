@@ -55,11 +55,35 @@ interface CategoryRepository {
     suspend fun seedDefaultsIfEmpty()
 }
 
+enum class BubbleShape { CIRCLE, ROUNDED, SQUARE }
+
 data class BubbleSettings(
     val enabled: Boolean,
     val autoHideSeconds: Int,
     val startY: Int,
-)
+    /** Diameter of the collapsed bubble, in dp. */
+    val sizeDp: Int = DEFAULT_SIZE_DP,
+    val shape: BubbleShape = BubbleShape.CIRCLE,
+    /** ARGB colour, or null to follow the app theme. */
+    val colorArgb: Long? = null,
+    val opacity: Float = 1f,
+    /** Show the amount inside the bubble, or just an icon. */
+    val showAmount: Boolean = true,
+) {
+    companion object {
+        const val DEFAULT_SIZE_DP = 64
+        const val MIN_SIZE_DP = 40
+        const val MAX_SIZE_DP = 96
+        const val MIN_OPACITY = 0.3f
+
+        /** Preset swatches offered in settings; null means "follow the theme". */
+        val PRESET_COLORS: List<Long?> = listOf(
+            null,
+            0xFF1B6E4F, 0xFF1565C0, 0xFF6A1B9A, 0xFFC62828,
+            0xFFEF6C00, 0xFF00695C, 0xFF37474F, 0xFFAD1457,
+        )
+    }
+}
 
 data class ApiSettings(
     val enabled: Boolean,
@@ -95,6 +119,11 @@ interface SettingsRepository {
     suspend fun setBubbleEnabled(enabled: Boolean)
     suspend fun setBubbleAutoHideSeconds(seconds: Int)
     suspend fun setBubbleStartY(y: Int)
+    suspend fun setBubbleSizeDp(sizeDp: Int)
+    suspend fun setBubbleShape(shape: BubbleShape)
+    suspend fun setBubbleColor(argb: Long?)
+    suspend fun setBubbleOpacity(opacity: Float)
+    suspend fun setBubbleShowAmount(show: Boolean)
     suspend fun setApiEnabled(enabled: Boolean)
     suspend fun setApiBaseUrl(url: String)
     suspend fun setApiAuthToken(token: String)

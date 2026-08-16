@@ -185,6 +185,23 @@ class FakeSettingsRepository(
     override suspend fun setBubbleEnabled(enabled: Boolean) { _bubble.value = _bubble.value.copy(enabled = enabled) }
     override suspend fun setBubbleAutoHideSeconds(seconds: Int) { _bubble.value = _bubble.value.copy(autoHideSeconds = seconds) }
     override suspend fun setBubbleStartY(y: Int) { _bubble.value = _bubble.value.copy(startY = y) }
+    override suspend fun setBubbleSizeDp(sizeDp: Int) {
+        _bubble.value = _bubble.value.copy(
+            sizeDp = sizeDp.coerceIn(BubbleSettings.MIN_SIZE_DP, BubbleSettings.MAX_SIZE_DP)
+        )
+    }
+    override suspend fun setBubbleShape(shape: com.smsexpense.tracker.domain.repository.BubbleShape) {
+        _bubble.value = _bubble.value.copy(shape = shape)
+    }
+    override suspend fun setBubbleColor(argb: Long?) { _bubble.value = _bubble.value.copy(colorArgb = argb) }
+    override suspend fun setBubbleOpacity(opacity: Float) {
+        _bubble.value = _bubble.value.copy(
+            opacity = opacity.coerceIn(BubbleSettings.MIN_OPACITY, 1f)
+        )
+    }
+    override suspend fun setBubbleShowAmount(show: Boolean) {
+        _bubble.value = _bubble.value.copy(showAmount = show)
+    }
     override suspend fun setApiEnabled(enabled: Boolean) { _api.value = _api.value.copy(enabled = enabled) }
     override suspend fun setApiBaseUrl(url: String) { _api.value = _api.value.copy(baseUrl = url) }
     override suspend fun setApiAuthToken(token: String) { _api.value = _api.value.copy(authToken = token) }
