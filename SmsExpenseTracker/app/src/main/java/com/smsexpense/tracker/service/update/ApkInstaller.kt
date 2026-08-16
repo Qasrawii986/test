@@ -32,11 +32,24 @@ object ApkInstaller {
         )
 
     /**
-     * Streams [apk] into a new install session and commits it. Returns null on
-     * success (the system dialog takes over), or an error message.
+     * Hands the APK to Android for installation. Returns null when the system has
+     * taken over, or an error message.
+     *
+     * The system installer activity is tried FIRST on purpose: it is the flow
+     * users know from every other app — a confirmation screen, a progress bar,
+     * the app closing while it is replaced — and it is the most compatible across
+     * OEMs. The PackageInstaller session API is kept as a fallback; it is the
+     * more modern path but renders no UI of its own and some OEM installers
+     * (Samsung among them) reject it outright for self-updates.
      */
     suspend fun install(context: Context, apk: File): String? = withContext(Dispatchers.IO) {
         if (!apk.exists() || apk.length() == 0L) return@withContext "Downloaded file is missing"
+        if (openWithSystemInstaller(context, apk)) return@withContext null
+        AppLog.w("System installer unavailable; falling back to an install session")
+        installViaSession(context, apk)
+    }
+
+    private suspend fun installViaSession(context: Context, apk: File): String? = withContext(Dispatchers.IO) {
         val installer = context.packageManager.packageInstaller
         var sessionId = -1
         try {
@@ -70,17 +83,14 @@ object ApkInstaller {
         } catch (e: Exception) {
             AppLog.e("APK install failed", e)
             if (sessionId != -1) runCatching { installer.abandonSession(sessionId) }
-            // Some OEM installers (notably Samsung) reject the session path for
-            // self-updates; hand the APK to the system installer activity instead.
-            if (openWithSystemInstaller(context, apk)) null
-            else "Install failed: ${e.message ?: e.javaClass.simpleName}"
+            "Install failed: ${e.message ?: e.javaClass.simpleName}"
         }
     }
 
     /**
-     * Legacy fallback: launch the system package-installer activity on a
-     * FileProvider URI. Deprecated in favour of the session API but still the
-     * most widely compatible path when a session is refused.
+     * Launches the system package-installer activity on a FileProvider URI: the
+     * familiar confirm → progress → done flow, with Android replacing the app and
+     * closing this process while it does so.
      */
     fun openWithSystemInstaller(context: Context, apk: File): Boolean = try {
         val uri = androidx.core.content.FileProvider.getUriForFile(

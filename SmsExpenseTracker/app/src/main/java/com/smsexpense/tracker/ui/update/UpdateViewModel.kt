@@ -10,6 +10,7 @@ import com.smsexpense.tracker.domain.usecase.CheckForUpdateUseCase
 import com.smsexpense.tracker.service.update.ApkInstaller
 import com.smsexpense.tracker.service.update.InstallResultReceiver
 import com.smsexpense.tracker.util.AppLog
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,6 +23,10 @@ sealed class UpdateStage {
     data class Available(val info: UpdateInfo) : UpdateStage()
     data class Downloading(val progress: Float) : UpdateStage()
     data class ReadyToInstall(val info: UpdateInfo) : UpdateStage()
+    /** Handed to Android: its confirm/progress screen is on top of us now. */
+    data class Installing(val info: UpdateInfo) : UpdateStage()
+    /** Shown after the process comes back up on the new version. */
+    data class Installed(val versionName: String) : UpdateStage()
     data class Error(val message: String) : UpdateStage()
 }
 
@@ -36,8 +41,9 @@ class UpdateViewModel(
     application: Application,
     private val api: UpdateApi,
     private val checkForUpdate: CheckForUpdateUseCase,
+    private val settings: com.smsexpense.tracker.domain.repository.SettingsRepository,
     currentVersionName: String,
-    currentVersionCode: Int,
+    private val currentVersionCode: Int,
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(
@@ -47,15 +53,21 @@ class UpdateViewModel(
             canInstall = ApkInstaller.canInstall(application),
         )
     )
+
     val uiState: StateFlow<UpdateUiState> = _uiState
 
     private var downloadedApk: File? = null
     private var fallbackAttempted = false
 
+    init {
+        reconcilePendingInstall()
+    }
+
     fun refreshInstallPermission() {
         _uiState.value = _uiState.value.copy(
             canInstall = ApkInstaller.canInstall(getApplication())
         )
+        reconcilePendingInstall()
     }
 
     fun check() {
@@ -94,15 +106,31 @@ class UpdateViewModel(
     fun install() {
         val apk = downloadedApk ?: return
         val info = (_uiState.value.stage as? UpdateStage.ReadyToInstall)?.info
+            ?: (_uiState.value.stage as? UpdateStage.Installing)?.info
+            ?: return
         viewModelScope.launch {
             InstallResultReceiver.lastError = null
+            // Remember what we are installing: this process is about to be killed
+            // and replaced, so success can only be confirmed after it restarts.
+            settings.setPendingUpdateVersion(info.versionCode, info.versionName)
             val error = ApkInstaller.install(getApplication(), apk)
-            if (error != null) {
-                _uiState.value = _uiState.value.copy(stage = UpdateStage.Error(error))
-            } else if (info != null) {
-                // System install UI is now in charge; keep the ready state so the
-                // user can retry if they dismiss it.
-                _uiState.value = _uiState.value.copy(stage = UpdateStage.ReadyToInstall(info))
+            _uiState.value = _uiState.value.copy(
+                stage = if (error != null) UpdateStage.Error(error) else UpdateStage.Installing(info)
+            )
+        }
+    }
+
+    /**
+     * Called when the screen resumes. If the running build is at least the version
+     * we handed to Android, the update went through (the process was replaced).
+     */
+    private fun reconcilePendingInstall() {
+        viewModelScope.launch {
+            val pending = settings.pendingUpdateVersion.first()
+            if (pending.first <= 0) return@launch
+            if (currentVersionCode >= pending.first) {
+                settings.clearPendingUpdateVersion()
+                _uiState.value = _uiState.value.copy(stage = UpdateStage.Installed(pending.second))
             }
         }
     }

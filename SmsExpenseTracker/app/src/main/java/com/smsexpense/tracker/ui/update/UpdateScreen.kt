@@ -163,19 +163,61 @@ fun UpdateScreen(
                 }
                 is UpdateStage.ReadyToInstall -> {
                     Card {
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
                                 "Ready to install ${stage.info.versionName}",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                "Android will ask you to confirm. Your data is kept.",
+                                "Android will show its own confirmation screen. The app closes " +
+                                    "while it installs, then you reopen it — your data is kept.",
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
                     }
                     Button(onClick = viewModel::install, modifier = Modifier.fillMaxWidth()) {
                         Text("Install now")
+                    }
+                }
+                is UpdateStage.Installing -> {
+                    Card {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.height(20.dp))
+                                Spacer(Modifier.padding(horizontal = 8.dp))
+                                Text(
+                                    "Installing ${stage.info.versionName}…",
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                            }
+                            Text(
+                                "Confirm on Android's install screen. This app will close while " +
+                                    "it is replaced — reopen it afterwards and this screen will " +
+                                    "confirm the new version.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = viewModel::installViaSystemInstaller,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Nothing appeared — try again") }
+                }
+                is UpdateStage.Installed -> {
+                    Card {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                "✅ Updated to ${stage.versionName}",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                "The update installed successfully.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                    OutlinedButton(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
+                        Text("Check for updates")
                     }
                 }
                 is UpdateStage.Error -> {

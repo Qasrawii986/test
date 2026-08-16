@@ -213,6 +213,7 @@ class MainActivity : ComponentActivity() {
                             application = application,
                             api = container.updateApi,
                             checkForUpdate = container.checkForUpdate,
+                            settings = container.settingsRepository,
                             currentVersionName = BuildConfig.VERSION_NAME,
                             currentVersionCode = BuildConfig.VERSION_CODE,
                         )

@@ -85,6 +85,8 @@ interface SettingsRepository {
     /** Sensor-based triple back tap; opt-in because it costs battery. */
     val backTapEnabled: Flow<Boolean>
     val backTapSensitivity: Flow<String>
+    /** (versionCode, versionName) handed to the installer; survives the process being replaced. */
+    val pendingUpdateVersion: Flow<Pair<Int, String>>
 
     suspend fun addSenderId(id: String)
     suspend fun removeSenderId(id: String)
@@ -100,4 +102,6 @@ interface SettingsRepository {
     suspend fun setLastBubbleStatus(status: String)
     suspend fun setBackTapEnabled(enabled: Boolean)
     suspend fun setBackTapSensitivity(name: String)
+    suspend fun setPendingUpdateVersion(versionCode: Int, versionName: String)
+    suspend fun clearPendingUpdateVersion()
 }

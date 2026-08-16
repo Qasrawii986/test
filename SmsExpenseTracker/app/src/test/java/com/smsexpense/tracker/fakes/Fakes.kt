@@ -200,6 +200,13 @@ class FakeSettingsRepository(
     override val backTapSensitivity: Flow<String> = _backTapSensitivity
     override suspend fun setBackTapEnabled(enabled: Boolean) { _backTapEnabled.value = enabled }
     override suspend fun setBackTapSensitivity(name: String) { _backTapSensitivity.value = name }
+
+    private val _pendingUpdate = MutableStateFlow(0 to "")
+    override val pendingUpdateVersion: Flow<Pair<Int, String>> = _pendingUpdate
+    override suspend fun setPendingUpdateVersion(versionCode: Int, versionName: String) {
+        _pendingUpdate.value = versionCode to versionName
+    }
+    override suspend fun clearPendingUpdateVersion() { _pendingUpdate.value = 0 to "" }
 }
 
 class FakeDeviceSmsSource(
