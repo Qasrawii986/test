@@ -15,7 +15,7 @@ import com.smsexpense.tracker.data.local.entity.PaymentEntity
 
 @Database(
     entities = [PaymentEntity::class, CategoryEntity::class, ImportHistoryEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -47,6 +47,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v2 → v3: categories.parentId for the two-level tree. Existing rows stay roots. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN parentId INTEGER DEFAULT NULL")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_categories_parentId ON categories (parentId)")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -54,7 +62,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "sms_expense.db",
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { instance = it }
             }

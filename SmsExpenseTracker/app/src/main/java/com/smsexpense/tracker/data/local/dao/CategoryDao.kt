@@ -31,6 +31,12 @@ interface CategoryDao {
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun count(): Int
 
-    @Query("SELECT COALESCE(MAX(sortOrder), 0) FROM categories")
-    suspend fun maxSortOrder(): Int
+    @Query("SELECT COALESCE(MAX(sortOrder), 0) FROM categories WHERE parentId IS :parentId")
+    suspend fun maxSortOrderIn(parentId: Long?): Int
+
+    @Query("SELECT * FROM categories WHERE parentId = :parentId ORDER BY sortOrder ASC")
+    suspend fun childrenOf(parentId: Long): List<CategoryEntity>
+
+    @Query("DELETE FROM categories WHERE parentId = :parentId")
+    suspend fun deleteChildrenOf(parentId: Long)
 }

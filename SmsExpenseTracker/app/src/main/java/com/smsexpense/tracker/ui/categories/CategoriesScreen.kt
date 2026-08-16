@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.domain.model.Category
 
@@ -49,6 +50,8 @@ fun CategoriesScreen(
     val state by viewModel.uiState.collectAsState()
     var editing by remember { mutableStateOf<Category?>(null) }
     var showAdd by remember { mutableStateOf(false) }
+    var addingSubcategoryOf by remember { mutableStateOf<Category?>(null) }
+    var deleting by remember { mutableStateOf<Pair<Category, Int>?>(null) }
 
     Scaffold(
         topBar = {
@@ -72,31 +75,31 @@ fun CategoriesScreen(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(state.categories, key = { it.id }) { category ->
+            items(state.tree, key = { it.category.id }) { node ->
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    ) {
-                        Text(category.icon, style = MaterialTheme.typography.titleLarge)
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            category.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
+                    Column {
+                        CategoryRow(
+                            category = node.category,
+                            isRoot = true,
+                            onMoveUp = { viewModel.move(node.category.id, up = true) },
+                            onMoveDown = { viewModel.move(node.category.id, up = false) },
+                            onEdit = { editing = node.category },
+                            onDelete = { deleting = node.category to node.children.size },
                         )
-                        IconButton(onClick = { viewModel.move(category.id, up = true) }) {
-                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
+                        node.children.forEach { child ->
+                            CategoryRow(
+                                category = child,
+                                isRoot = false,
+                                onMoveUp = { viewModel.move(child.id, up = true) },
+                                onMoveDown = { viewModel.move(child.id, up = false) },
+                                onEdit = { editing = child },
+                                onDelete = { viewModel.delete(child.id) },
+                            )
                         }
-                        IconButton(onClick = { viewModel.move(category.id, up = false) }) {
-                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
-                        }
-                        IconButton(onClick = { editing = category }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit")
-                        }
-                        IconButton(onClick = { viewModel.delete(category.id) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
-                        }
+                        androidx.compose.material3.TextButton(
+                            onClick = { addingSubcategoryOf = node.category },
+                            modifier = Modifier.padding(start = 24.dp, bottom = 4.dp),
+                        ) { Text("+ Add subcategory") }
                     }
                 }
             }
@@ -105,7 +108,7 @@ fun CategoriesScreen(
 
     if (showAdd) {
         CategoryDialog(
-            title = "Add category",
+            title = "Add main category",
             initialName = "",
             initialIcon = "",
             onConfirm = { name, icon ->
@@ -113,6 +116,41 @@ fun CategoriesScreen(
                 showAdd = false
             },
             onDismiss = { showAdd = false },
+        )
+    }
+    addingSubcategoryOf?.let { parent ->
+        CategoryDialog(
+            title = "Add subcategory to ${parent.name}",
+            initialName = "",
+            initialIcon = "",
+            onConfirm = { name, icon ->
+                viewModel.add(name, icon, parentId = parent.id)
+                addingSubcategoryOf = null
+            },
+            onDismiss = { addingSubcategoryOf = null },
+        )
+    }
+    deleting?.let { (category, childCount) ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text("Delete ${category.name}?") },
+            text = {
+                Text(
+                    if (childCount > 0) {
+                        "This also deletes its $childCount subcategories. Payments in them " +
+                            "stay, but lose their category."
+                    } else {
+                        "Payments in this category stay, but lose their category."
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.delete(category.id)
+                    deleting = null
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
         )
     }
     editing?.let { category ->
@@ -126,6 +164,52 @@ fun CategoriesScreen(
             },
             onDismiss = { editing = null },
         )
+    }
+}
+
+@Composable
+private fun CategoryRow(
+    category: Category,
+    isRoot: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(
+            start = if (isRoot) 12.dp else 32.dp,
+            end = 4.dp,
+            top = 2.dp,
+            bottom = 2.dp,
+        ),
+    ) {
+        Text(
+            category.icon,
+            style = if (isRoot) MaterialTheme.typography.titleLarge
+            else MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            category.name,
+            style = if (isRoot) MaterialTheme.typography.bodyLarge
+            else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isRoot) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(onClick = onMoveUp) {
+            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
+        }
+        IconButton(onClick = onMoveDown) {
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
+        }
+        IconButton(onClick = onEdit) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit")
+        }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete")
+        }
     }
 }
 

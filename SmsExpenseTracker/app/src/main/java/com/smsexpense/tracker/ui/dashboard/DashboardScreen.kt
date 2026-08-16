@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.smsexpense.tracker.domain.model.rootIdOf
 import com.smsexpense.tracker.ui.components.CategoryBar
 import com.smsexpense.tracker.ui.components.MonthPicker
 import com.smsexpense.tracker.ui.components.PaymentRow
@@ -140,8 +141,17 @@ fun DashboardScreen(
                 }
             }
 
+            // Report view: totals roll up into the main category, with the
+            // subcategory breakdown listed underneath it.
             val perCategory = stats?.perCategory.orEmpty().filter { it.total > 0 }
             if (perCategory.isNotEmpty()) {
+                val rootOf = state.categories.rootIdOf()
+                val rollup = perCategory
+                    .groupBy { row -> row.categoryId?.let { rootOf[it] } }
+                    .mapValues { (_, rows) -> rows.sumOf { it.total } }
+                    .entries.sortedByDescending { it.value }
+                val maxRoot = rollup.maxOf { it.value }
+
                 item {
                     Text("By category", style = MaterialTheme.typography.titleMedium)
                 }
@@ -151,17 +161,40 @@ fun DashboardScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            val max = perCategory.maxOf { it.total }
-                            perCategory.forEachIndexed { index, row ->
-                                val category = row.categoryId?.let { categoriesById[it] }
+                            rollup.forEachIndexed { index, (rootId, rootTotal) ->
+                                val root = rootId?.let { categoriesById[it] }
                                 CategoryBar(
-                                    label = category?.name ?: "Uncategorized",
-                                    icon = category?.icon ?: "❓",
-                                    amount = row.total,
+                                    label = root?.name ?: "Uncategorized",
+                                    icon = root?.icon ?: "❓",
+                                    amount = rootTotal,
                                     currency = currency,
-                                    fraction = (row.total / max).toFloat(),
-                                    color = colorForCategory(category, index),
+                                    fraction = (rootTotal / maxRoot).toFloat(),
+                                    color = colorForCategory(root, index),
                                 )
+                                // Sub-breakdown, only when this root actually has splits.
+                                val parts = perCategory
+                                    .filter { row -> row.categoryId?.let { rootOf[it] } == rootId }
+                                    .sortedByDescending { it.total }
+                                if (parts.size > 1) {
+                                    parts.forEach { part ->
+                                        val leaf = part.categoryId?.let { categoriesById[it] }
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(start = 20.dp),
+                                        ) {
+                                            Text(
+                                                "${leaf?.icon ?: "❓"} ${leaf?.name ?: "Uncategorized"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                            Text(
+                                                formatAmount(part.total, currency),
+                                                style = MaterialTheme.typography.bodySmall,
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

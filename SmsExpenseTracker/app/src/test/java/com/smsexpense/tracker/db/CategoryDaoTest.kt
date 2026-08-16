@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.smsexpense.tracker.data.local.database.AppDatabase
 import com.smsexpense.tracker.data.local.entity.CategoryEntity
 import com.smsexpense.tracker.data.repository.RoomCategoryRepository
+import com.smsexpense.tracker.domain.model.toTree
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -57,12 +58,14 @@ class CategoryDaoTest {
     }
 
     @Test
-    fun `move swaps ordering`() = runTest {
+    fun `move swaps ordering among root categories`() = runTest {
         repository.seedDefaultsIfEmpty()
-        val before = repository.getAll()
+        // getAll() is now a flat list of roots and subcategories; ordering applies
+        // within each sibling group, so compare roots.
+        val before = repository.getAll().toTree().map { it.category }
         val second = before[1]
         repository.move(second.id, up = true)
-        val after = repository.getAll()
+        val after = repository.getAll().toTree().map { it.category }
         assertEquals(second.id, after[0].id)
         assertEquals(before[0].id, after[1].id)
     }

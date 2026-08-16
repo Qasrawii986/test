@@ -45,7 +45,10 @@ data class ImportHistoryEntity(
     val currency: String,
 )
 
-@Entity(tableName = "categories")
+@Entity(
+    tableName = "categories",
+    indices = [Index(value = ["parentId"])],
+)
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -53,4 +56,6 @@ data class CategoryEntity(
     val color: Long?,
     val sortOrder: Int,
     val createdAt: Long,
+    // Added in DB v3. Null = root category; existing rows stay roots.
+    val parentId: Long? = null,
 )

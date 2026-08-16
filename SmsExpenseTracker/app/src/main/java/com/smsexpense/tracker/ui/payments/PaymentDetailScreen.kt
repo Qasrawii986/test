@@ -91,15 +91,19 @@ fun PaymentDetailScreen(
             DetailRow("Confidence", "%.0f%%".format(payment.confidence * 100))
 
             Text("Category", style = MaterialTheme.typography.titleMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.categories.forEach { category ->
-                    FilterChip(
-                        selected = category.id == payment.categoryId,
-                        onClick = { viewModel.setCategory(category.id) },
-                        label = { Text("${category.icon} ${category.name}") },
+            com.smsexpense.tracker.ui.components.categoryPath(state.categories, payment.categoryId)
+                ?.let { path ->
+                    Text(
+                        "Current: $path",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
-            }
+            com.smsexpense.tracker.ui.components.CategoryChips(
+                categories = state.categories,
+                onSelected = { viewModel.setCategory(it) },
+                selectedId = payment.categoryId,
+            )
 
             Text("Original SMS", style = MaterialTheme.typography.titleMedium)
             Card(modifier = Modifier.fillMaxWidth()) {

@@ -91,6 +91,10 @@ data class ImportRecord(
     val currency: String,
 )
 
+/**
+ * Expense category. The tree is deliberately two levels deep: a root category
+ * ([parentId] == null) may have subcategories, a subcategory may not.
+ */
 data class Category(
     val id: Long,
     val name: String,
@@ -98,7 +102,35 @@ data class Category(
     val color: Long?,
     val sortOrder: Int,
     val createdAt: Long,
-)
+    val parentId: Long? = null,
+) {
+    val isRoot: Boolean get() = parentId == null
+}
+
+/** A root category with its subcategories, ready for tree UI and reports. */
+data class CategoryNode(
+    val category: Category,
+    val children: List<Category>,
+) {
+    val hasChildren: Boolean get() = children.isNotEmpty()
+}
+
+/** Builds the two-level tree from a flat list, keeping sort order. */
+fun List<Category>.toTree(): List<CategoryNode> {
+    val childrenByParent = filter { !it.isRoot }.groupBy { it.parentId }
+    return filter { it.isRoot }.map { root ->
+        CategoryNode(root, childrenByParent[root.id].orEmpty())
+    }
+}
+
+/** Maps every category id to the id of the root it rolls up into. */
+fun List<Category>.rootIdOf(): Map<Long, Long> {
+    val byId = associateBy { it.id }
+    return associate { category ->
+        val rootId = category.parentId?.let { byId[it]?.id } ?: category.id
+        category.id to rootId
+    }
+}
 
 data class CategoryTotal(
     val categoryId: Long?,

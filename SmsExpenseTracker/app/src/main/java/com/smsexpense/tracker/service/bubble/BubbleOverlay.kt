@@ -195,16 +195,10 @@ private fun ExpandedPanel(
                 }
             }
             Spacer(Modifier.height(12.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                categories.forEach { category ->
-                    AssistChip(
-                        onClick = { onCategorySelected(category.id) },
-                        label = { Text("${category.icon} ${category.name}") },
-                    )
-                }
-            }
+            com.smsexpense.tracker.ui.components.CategoryChips(
+                categories = categories,
+                onSelected = onCategorySelected,
+            )
             Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) { Text("Later") }

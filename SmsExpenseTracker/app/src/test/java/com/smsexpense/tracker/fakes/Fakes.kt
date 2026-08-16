@@ -126,14 +126,19 @@ class FakeCategoryRepository : CategoryRepository {
     override suspend fun getAll(): List<Category> = categories.value
     override suspend fun getById(id: Long): Category? = categories.value.find { it.id == id }
 
-    override suspend fun add(name: String, icon: String, color: Long?): Long {
+    override suspend fun add(name: String, icon: String, color: Long?, parentId: Long?): Long {
+        // Mirror the real repository: never deeper than two levels.
+        val effectiveParent = parentId?.let { requested ->
+            categories.value.find { it.id == requested }?.let { it.parentId ?: it.id }
+        }
         val category = Category(
             id = nextId++,
             name = name,
             icon = icon,
             color = color,
-            sortOrder = categories.value.size,
+            sortOrder = categories.value.count { it.parentId == effectiveParent },
             createdAt = 0L,
+            parentId = effectiveParent,
         )
         categories.value = categories.value + category
         return category.id
@@ -144,13 +149,13 @@ class FakeCategoryRepository : CategoryRepository {
     }
 
     override suspend fun delete(id: Long) {
-        categories.value = categories.value.filterNot { it.id == id }
+        categories.value = categories.value.filterNot { it.id == id || it.parentId == id }
     }
 
     override suspend fun move(id: Long, up: Boolean) = Unit
 
     override suspend fun seedDefaultsIfEmpty() {
-        if (categories.value.isEmpty()) add("Other", "📦", null)
+        if (categories.value.isEmpty()) add("Other", "📦", null, null)
     }
 }
 

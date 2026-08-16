@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.smsexpense.tracker.domain.model.Category
+import com.smsexpense.tracker.domain.model.toTree
 import com.smsexpense.tracker.ui.components.formatAmount
 import com.smsexpense.tracker.ui.components.formatDate
 import com.smsexpense.tracker.ui.components.formatDateTime
@@ -486,7 +487,9 @@ private fun CategoryPickerDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            ) {
                 Text(
                     "❓ Uncategorized",
                     style = MaterialTheme.typography.bodyLarge,
@@ -495,15 +498,28 @@ private fun CategoryPickerDialog(
                         .clickable { onPick(null) }
                         .padding(vertical = 10.dp),
                 )
-                categories.forEach { category ->
+                // Roots followed by their indented subcategories.
+                categories.toTree().forEach { node ->
                     Text(
-                        "${category.icon} ${category.name}",
+                        "${node.category.icon} ${node.category.name}",
                         style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onPick(category.id) }
+                            .clickable { onPick(node.category.id) }
                             .padding(vertical = 10.dp),
                     )
+                    node.children.forEach { child ->
+                        Text(
+                            "${child.icon} ${child.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPick(child.id) }
+                                .padding(start = 24.dp)
+                                .padding(vertical = 8.dp),
+                        )
+                    }
                 }
             }
         },

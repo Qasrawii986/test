@@ -45,9 +45,12 @@ interface CategoryRepository {
     fun observeAll(): Flow<List<Category>>
     suspend fun getAll(): List<Category>
     suspend fun getById(id: Long): Category?
-    suspend fun add(name: String, icon: String, color: Long?): Long
+    /** [parentId] null creates a root category; otherwise a subcategory of that root. */
+    suspend fun add(name: String, icon: String, color: Long?, parentId: Long? = null): Long
     suspend fun update(category: Category)
+    /** Deleting a root also deletes its subcategories; affected payments lose their link. */
     suspend fun delete(id: Long)
+    /** Reorders within the category's own sibling group. */
     suspend fun move(id: Long, up: Boolean)
     suspend fun seedDefaultsIfEmpty()
 }

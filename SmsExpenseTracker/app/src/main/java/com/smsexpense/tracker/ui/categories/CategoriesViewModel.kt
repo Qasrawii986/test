@@ -3,6 +3,8 @@ package com.smsexpense.tracker.ui.categories
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smsexpense.tracker.domain.model.Category
+import com.smsexpense.tracker.domain.model.CategoryNode
+import com.smsexpense.tracker.domain.model.toTree
 import com.smsexpense.tracker.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +15,9 @@ import kotlinx.coroutines.launch
 data class CategoriesUiState(
     val loading: Boolean = true,
     val categories: List<Category> = emptyList(),
-)
+) {
+    val tree: List<CategoryNode> get() = categories.toTree()
+}
 
 class CategoriesViewModel(
     private val categoryRepository: CategoryRepository,
@@ -23,10 +27,11 @@ class CategoriesViewModel(
         .map { CategoriesUiState(loading = false, categories = it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CategoriesUiState())
 
-    fun add(name: String, icon: String) {
+    /** [parentId] null adds a main category, otherwise a subcategory. */
+    fun add(name: String, icon: String, parentId: Long? = null) {
         if (name.isBlank()) return
         viewModelScope.launch {
-            categoryRepository.add(name, icon.ifBlank { "📦" }, color = null)
+            categoryRepository.add(name, icon.ifBlank { "📦" }, color = null, parentId = parentId)
         }
     }
 
