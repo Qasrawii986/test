@@ -68,7 +68,7 @@ class BubbleService : Service() {
     internal val queuedCount = MutableStateFlow(0)
     internal val appearance = MutableStateFlow(
         com.smsexpense.tracker.domain.repository.BubbleSettings(
-            enabled = true, autoHideSeconds = 45, startY = 300,
+            enabled = true, autoHideSeconds = 45,
         )
     )
     private var autoHideJob: Job? = null
@@ -173,7 +173,9 @@ class BubbleService : Service() {
             showNextSafely()
             return
         }
-        val startY = container.settingsRepository.bubbleSettings.first().startY
+        val settings = container.settingsRepository.bubbleSettings.first()
+        val (screenWidth, screenHeight) = screenSize()
+        val bubblePx = bubbleSizePx()
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -185,8 +187,10 @@ class BubbleService : Service() {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 16
-            y = startY
+            // Percentages of the usable area, so the saved spot lands correctly on
+            // any screen size and stays fully on-screen.
+            x = ((screenWidth - bubblePx) * settings.startXPercent).toInt().coerceAtLeast(0)
+            y = ((screenHeight - bubblePx) * settings.startYPercent).toInt().coerceAtLeast(0)
         }
         layoutParams = params
 
@@ -255,9 +259,23 @@ class BubbleService : Service() {
             // Same outcome as "Later": keep the payment, drop the bubble.
             onDismissed()
         } else {
+            if (appearance.value.snapToEdge) snapToNearestEdge()
             persistBubblePosition()
             startAutoHideTimer()
         }
+    }
+
+    /** Messenger-style: park the bubble against whichever side edge is closer. */
+    private fun snapToNearestEdge() {
+        val params = layoutParams ?: return
+        val view = overlayView ?: return
+        val (width, _) = screenSize()
+        if (width == 0) return
+        val bubblePx = bubbleSizePx()
+        val center = params.x + bubblePx / 2
+        params.x = if (center < width / 2) EDGE_MARGIN_PX else width - bubblePx - EDGE_MARGIN_PX
+        runCatching { windowManager?.updateViewLayout(view, params) }
+            .onFailure { AppLog.w("snap to edge failed", it) }
     }
 
     /** Bottom-centre hot zone: the lower sixth of the screen, middle half horizontally. */
@@ -340,9 +358,16 @@ class BubbleService : Service() {
     }
 
     private fun persistBubblePosition() {
-        val y = layoutParams?.y ?: return
+        if (!appearance.value.rememberPosition) return
+        val params = layoutParams ?: return
+        val (width, height) = screenSize()
+        val bubblePx = bubbleSizePx()
+        val usableWidth = (width - bubblePx).coerceAtLeast(1)
+        val usableHeight = (height - bubblePx).coerceAtLeast(1)
+        val xPercent = params.x.toFloat() / usableWidth
+        val yPercent = params.y.toFloat() / usableHeight
         serviceScope.launch(Dispatchers.IO) {
-            container.settingsRepository.setBubbleStartY(y)
+            container.settingsRepository.setBubblePosition(xPercent, yPercent)
         }
     }
 
@@ -421,5 +446,6 @@ class BubbleService : Service() {
         const val EXTRA_PAYMENT_ID = "payment_id"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bubble"
+        private const val EDGE_MARGIN_PX = 8
     }
 }

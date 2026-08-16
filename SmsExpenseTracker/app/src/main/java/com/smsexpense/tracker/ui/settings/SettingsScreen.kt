@@ -168,6 +168,16 @@ fun SettingsScreen(
                 )
             }
 
+            // --- Bubble position ---
+            SectionCard(title = "Bubble position") {
+                BubblePositionPicker(
+                    settings = state.bubble,
+                    onPositionChange = viewModel::setBubblePosition,
+                    onRememberChange = viewModel::setBubbleRememberPosition,
+                    onSnapChange = viewModel::setBubbleSnapToEdge,
+                )
+            }
+
             // --- Bubble appearance ---
             SectionCard(title = "Bubble appearance") {
                 BubbleAppearanceControls(

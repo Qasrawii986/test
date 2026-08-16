@@ -26,7 +26,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val CONFIDENCE_THRESHOLD = floatPreferencesKey("confidence_threshold")
         val BUBBLE_ENABLED = booleanPreferencesKey("bubble_enabled")
         val BUBBLE_AUTO_HIDE_SECONDS = intPreferencesKey("bubble_auto_hide_seconds")
-        val BUBBLE_START_Y = intPreferencesKey("bubble_start_y")
+        val BUBBLE_START_X_PCT = floatPreferencesKey("bubble_start_x_pct")
+        val BUBBLE_START_Y_PCT = floatPreferencesKey("bubble_start_y_pct")
+        val BUBBLE_REMEMBER_POSITION = booleanPreferencesKey("bubble_remember_position")
+        val BUBBLE_SNAP_TO_EDGE = booleanPreferencesKey("bubble_snap_to_edge")
         val BUBBLE_SIZE_DP = intPreferencesKey("bubble_size_dp")
         val BUBBLE_SHAPE = stringPreferencesKey("bubble_shape")
         val BUBBLE_COLOR = longPreferencesKey("bubble_color")
@@ -56,7 +59,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         BubbleSettings(
             enabled = it[Keys.BUBBLE_ENABLED] ?: true,
             autoHideSeconds = it[Keys.BUBBLE_AUTO_HIDE_SECONDS] ?: 45,
-            startY = it[Keys.BUBBLE_START_Y] ?: 300,
+            startXPercent = it[Keys.BUBBLE_START_X_PCT] ?: BubbleSettings.DEFAULT_X_PERCENT,
+            startYPercent = it[Keys.BUBBLE_START_Y_PCT] ?: BubbleSettings.DEFAULT_Y_PERCENT,
+            rememberPosition = it[Keys.BUBBLE_REMEMBER_POSITION] ?: true,
+            snapToEdge = it[Keys.BUBBLE_SNAP_TO_EDGE] ?: true,
             sizeDp = it[Keys.BUBBLE_SIZE_DP] ?: BubbleSettings.DEFAULT_SIZE_DP,
             shape = runCatching { BubbleShape.valueOf(it[Keys.BUBBLE_SHAPE] ?: "") }
                 .getOrDefault(BubbleShape.CIRCLE),
@@ -150,8 +156,19 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         context.dataStore.edit { it[Keys.BUBBLE_AUTO_HIDE_SECONDS] = seconds.coerceIn(5, 600) }
     }
 
-    override suspend fun setBubbleStartY(y: Int) {
-        context.dataStore.edit { it[Keys.BUBBLE_START_Y] = y }
+    override suspend fun setBubblePosition(xPercent: Float, yPercent: Float) {
+        context.dataStore.edit {
+            it[Keys.BUBBLE_START_X_PCT] = xPercent.coerceIn(0f, 1f)
+            it[Keys.BUBBLE_START_Y_PCT] = yPercent.coerceIn(0f, 1f)
+        }
+    }
+
+    override suspend fun setBubbleRememberPosition(remember: Boolean) {
+        context.dataStore.edit { it[Keys.BUBBLE_REMEMBER_POSITION] = remember }
+    }
+
+    override suspend fun setBubbleSnapToEdge(snap: Boolean) {
+        context.dataStore.edit { it[Keys.BUBBLE_SNAP_TO_EDGE] = snap }
     }
 
     override suspend fun setBubbleSizeDp(sizeDp: Int) {

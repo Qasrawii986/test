@@ -16,7 +16,7 @@ data class SettingsUiState(
     val senderIds: List<String> = emptyList(),
     val defaultCurrency: String = "JOD",
     val confidenceThreshold: Float = 0.5f,
-    val bubble: BubbleSettings = BubbleSettings(enabled = true, autoHideSeconds = 45, startY = 300),
+    val bubble: BubbleSettings = BubbleSettings(enabled = true, autoHideSeconds = 45),
     val api: ApiSettings = ApiSettings(enabled = false, baseUrl = "", authToken = ""),
     val lastBubbleStatus: String = "",
 )
@@ -52,6 +52,11 @@ class SettingsViewModel(
     fun setBubbleEnabled(enabled: Boolean) = launch { settings.setBubbleEnabled(enabled) }
     fun setBubbleAutoHide(seconds: Int) = launch { settings.setBubbleAutoHideSeconds(seconds) }
     fun setBubbleSize(sizeDp: Int) = launch { settings.setBubbleSizeDp(sizeDp) }
+    fun setBubblePosition(xPercent: Float, yPercent: Float) =
+        launch { settings.setBubblePosition(xPercent, yPercent) }
+    fun setBubbleRememberPosition(remember: Boolean) =
+        launch { settings.setBubbleRememberPosition(remember) }
+    fun setBubbleSnapToEdge(snap: Boolean) = launch { settings.setBubbleSnapToEdge(snap) }
     fun setBubbleShape(shape: com.smsexpense.tracker.domain.repository.BubbleShape) =
         launch { settings.setBubbleShape(shape) }
     fun setBubbleColor(argb: Long?) = launch { settings.setBubbleColor(argb) }

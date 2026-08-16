@@ -65,14 +65,36 @@ class BubbleAppearanceTest {
     @Test
     fun `appearance changes do not disturb behaviour settings`() = runTest {
         settings.setBubbleAutoHideSeconds(90)
-        settings.setBubbleStartY(777)
+        settings.setBubblePosition(0.9f, 0.2f)
         settings.setBubbleSizeDp(88)
 
         val bubble = settings.bubbleSettings.first()
         assertEquals(90, bubble.autoHideSeconds)
-        assertEquals(777, bubble.startY)
+        assertEquals(0.9f, bubble.startXPercent, 0.001f)
+        assertEquals(0.2f, bubble.startYPercent, 0.001f)
         assertEquals(88, bubble.sizeDp)
         assertTrue(bubble.enabled)
+    }
+
+    @Test
+    fun `position is stored as a clamped fraction of the screen`() = runTest {
+        settings.setBubblePosition(-0.5f, 3f)
+        val bubble = settings.bubbleSettings.first()
+        assertEquals(0f, bubble.startXPercent, 0.001f)
+        assertEquals(1f, bubble.startYPercent, 0.001f)
+    }
+
+    @Test
+    fun `remember position and edge snapping default on and toggle`() = runTest {
+        assertTrue(settings.bubbleSettings.first().rememberPosition)
+        assertTrue(settings.bubbleSettings.first().snapToEdge)
+
+        settings.setBubbleRememberPosition(false)
+        settings.setBubbleSnapToEdge(false)
+
+        val bubble = settings.bubbleSettings.first()
+        assertTrue(!bubble.rememberPosition)
+        assertTrue(!bubble.snapToEdge)
     }
 
     @Test

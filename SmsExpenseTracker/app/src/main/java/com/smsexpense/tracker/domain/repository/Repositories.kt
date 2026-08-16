@@ -60,7 +60,16 @@ enum class BubbleShape { CIRCLE, ROUNDED, SQUARE }
 data class BubbleSettings(
     val enabled: Boolean,
     val autoHideSeconds: Int,
-    val startY: Int,
+    /**
+     * Default position as a fraction of the screen (0f..1f) rather than pixels,
+     * so it survives different screen sizes and orientation changes.
+     */
+    val startXPercent: Float = DEFAULT_X_PERCENT,
+    val startYPercent: Float = DEFAULT_Y_PERCENT,
+    /** Dragging the bubble updates the default position. */
+    val rememberPosition: Boolean = true,
+    /** Release snaps the bubble to the nearest side edge. */
+    val snapToEdge: Boolean = true,
     /** Diameter of the collapsed bubble, in dp. */
     val sizeDp: Int = DEFAULT_SIZE_DP,
     val shape: BubbleShape = BubbleShape.CIRCLE,
@@ -75,6 +84,8 @@ data class BubbleSettings(
         const val MIN_SIZE_DP = 40
         const val MAX_SIZE_DP = 96
         const val MIN_OPACITY = 0.3f
+        const val DEFAULT_X_PERCENT = 0.02f
+        const val DEFAULT_Y_PERCENT = 0.35f
 
         /** Preset swatches offered in settings; null means "follow the theme". */
         val PRESET_COLORS: List<Long?> = listOf(
@@ -118,7 +129,9 @@ interface SettingsRepository {
     suspend fun setConfidenceThreshold(value: Float)
     suspend fun setBubbleEnabled(enabled: Boolean)
     suspend fun setBubbleAutoHideSeconds(seconds: Int)
-    suspend fun setBubbleStartY(y: Int)
+    suspend fun setBubblePosition(xPercent: Float, yPercent: Float)
+    suspend fun setBubbleRememberPosition(remember: Boolean)
+    suspend fun setBubbleSnapToEdge(snap: Boolean)
     suspend fun setBubbleSizeDp(sizeDp: Int)
     suspend fun setBubbleShape(shape: BubbleShape)
     suspend fun setBubbleColor(argb: Long?)

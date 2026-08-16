@@ -167,7 +167,7 @@ class FakeSettingsRepository(
     private val _senderIds = MutableStateFlow(senderIdsInitial)
     private val _currency = MutableStateFlow(currencyInitial)
     private val _threshold = MutableStateFlow(thresholdInitial)
-    private val _bubble = MutableStateFlow(BubbleSettings(enabled = true, autoHideSeconds = 45, startY = 300))
+    private val _bubble = MutableStateFlow(BubbleSettings(enabled = true, autoHideSeconds = 45))
     private val _api = MutableStateFlow(ApiSettings(enabled = false, baseUrl = "", authToken = ""))
     private val _setupCompleted = MutableStateFlow(false)
 
@@ -184,7 +184,18 @@ class FakeSettingsRepository(
     override suspend fun setConfidenceThreshold(value: Float) { _threshold.value = value }
     override suspend fun setBubbleEnabled(enabled: Boolean) { _bubble.value = _bubble.value.copy(enabled = enabled) }
     override suspend fun setBubbleAutoHideSeconds(seconds: Int) { _bubble.value = _bubble.value.copy(autoHideSeconds = seconds) }
-    override suspend fun setBubbleStartY(y: Int) { _bubble.value = _bubble.value.copy(startY = y) }
+    override suspend fun setBubblePosition(xPercent: Float, yPercent: Float) {
+        _bubble.value = _bubble.value.copy(
+            startXPercent = xPercent.coerceIn(0f, 1f),
+            startYPercent = yPercent.coerceIn(0f, 1f),
+        )
+    }
+    override suspend fun setBubbleRememberPosition(remember: Boolean) {
+        _bubble.value = _bubble.value.copy(rememberPosition = remember)
+    }
+    override suspend fun setBubbleSnapToEdge(snap: Boolean) {
+        _bubble.value = _bubble.value.copy(snapToEdge = snap)
+    }
     override suspend fun setBubbleSizeDp(sizeDp: Int) {
         _bubble.value = _bubble.value.copy(
             sizeDp = sizeDp.coerceIn(BubbleSettings.MIN_SIZE_DP, BubbleSettings.MAX_SIZE_DP)
