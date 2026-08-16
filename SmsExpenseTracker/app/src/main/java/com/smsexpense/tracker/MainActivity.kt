@@ -17,7 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -50,6 +52,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val container = appContainer()
         pendingPaymentId = intent?.getLongExtra(EXTRA_OPEN_PAYMENT_ID, 0L) ?: 0L
+
+        // Re-arm the back-tap gesture: its foreground service does not survive a
+        // reboot, and starting it from here (foreground) is always permitted.
+        lifecycleScope.launch {
+            if (container.settingsRepository.backTapEnabled.first()) {
+                com.smsexpense.tracker.service.quicklaunch.BackTapService.start(this@MainActivity)
+            }
+        }
 
         setContent {
             AppTheme {
@@ -177,8 +187,23 @@ class MainActivity : ComponentActivity() {
                     onChooseFromSms = { navController.navigate("senderPicker") },
                     onImportHistorical = { navController.navigate("historicalImport") },
                     onOpenUpdates = { navController.navigate("updates") },
+                    onOpenQuickLaunch = { navController.navigate("quickLaunch") },
                     onDebugUnlocked = { navController.navigate("debug") },
                     versionLabel = "Version ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})",
+                )
+            }
+            composable("quickLaunch") {
+                val vm: com.smsexpense.tracker.ui.quicklaunch.QuickLaunchViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.quicklaunch.QuickLaunchViewModel(
+                            application = application,
+                            settings = container.settingsRepository,
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.quicklaunch.QuickLaunchScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("updates") {

@@ -30,6 +30,8 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val API_AUTH_TOKEN = stringPreferencesKey("api_auth_token")
         val SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
         val LAST_BUBBLE_STATUS = stringPreferencesKey("last_bubble_status")
+        val BACK_TAP_ENABLED = booleanPreferencesKey("back_tap_enabled")
+        val BACK_TAP_SENSITIVITY = stringPreferencesKey("back_tap_sensitivity")
     }
 
     override val senderIds: Flow<Set<String>> =
@@ -69,6 +71,20 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override suspend fun setLastBubbleStatus(status: String) {
         context.dataStore.edit { it[Keys.LAST_BUBBLE_STATUS] = status }
+    }
+
+    override val backTapEnabled: Flow<Boolean> =
+        context.dataStore.data.map { it[Keys.BACK_TAP_ENABLED] ?: false }
+
+    override val backTapSensitivity: Flow<String> =
+        context.dataStore.data.map { it[Keys.BACK_TAP_SENSITIVITY] ?: "MEDIUM" }
+
+    override suspend fun setBackTapEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.BACK_TAP_ENABLED] = enabled }
+    }
+
+    override suspend fun setBackTapSensitivity(name: String) {
+        context.dataStore.edit { it[Keys.BACK_TAP_SENSITIVITY] = name }
     }
 
     override suspend fun addSenderId(id: String) {

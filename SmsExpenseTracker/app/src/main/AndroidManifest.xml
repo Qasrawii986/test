@@ -48,6 +48,51 @@
             </intent-filter>
         </receiver>
 
+        <!-- Quick launch: transparent trampoline shared by the tile, the pinned
+             shortcut and the assistant role. -->
+        <activity
+            android:name=".service.quicklaunch.QuickLaunchActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.SmsExpenseTracker.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".service.quicklaunch.QuickLaunchTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_foreground"
+            android:label="SMS Expense"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.quicklaunch.BackTapService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Reads the accelerometer so the user can open the app's quick actions by tapping the back of the device three times. Enabled only when the user turns the gesture on." />
+        </service>
+
+        <service
+            android:name=".service.panel.QuickPanelService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows a temporary floating quick-actions panel over other apps so the user can review this month's spending and categorize pending payments." />
+        </service>
+
         <service
             android:name=".service.bubble.BubbleService"
             android:exported="false"

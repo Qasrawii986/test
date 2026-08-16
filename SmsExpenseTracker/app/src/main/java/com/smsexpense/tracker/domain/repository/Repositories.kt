@@ -82,6 +82,9 @@ interface SettingsRepository {
     val setupCompleted: Flow<Boolean>
     /** Why the last detected payment did or did not raise a bubble (diagnostics). */
     val lastBubbleStatus: Flow<String>
+    /** Sensor-based triple back tap; opt-in because it costs battery. */
+    val backTapEnabled: Flow<Boolean>
+    val backTapSensitivity: Flow<String>
 
     suspend fun addSenderId(id: String)
     suspend fun removeSenderId(id: String)
@@ -95,4 +98,6 @@ interface SettingsRepository {
     suspend fun setApiAuthToken(token: String)
     suspend fun setSetupCompleted(completed: Boolean)
     suspend fun setLastBubbleStatus(status: String)
+    suspend fun setBackTapEnabled(enabled: Boolean)
+    suspend fun setBackTapSensitivity(name: String)
 }

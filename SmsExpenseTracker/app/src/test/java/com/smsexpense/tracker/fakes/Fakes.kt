@@ -193,6 +193,13 @@ class FakeSettingsRepository(
     private val _lastBubbleStatus = MutableStateFlow("")
     override val lastBubbleStatus: Flow<String> = _lastBubbleStatus
     override suspend fun setLastBubbleStatus(status: String) { _lastBubbleStatus.value = status }
+
+    private val _backTapEnabled = MutableStateFlow(false)
+    private val _backTapSensitivity = MutableStateFlow("MEDIUM")
+    override val backTapEnabled: Flow<Boolean> = _backTapEnabled
+    override val backTapSensitivity: Flow<String> = _backTapSensitivity
+    override suspend fun setBackTapEnabled(enabled: Boolean) { _backTapEnabled.value = enabled }
+    override suspend fun setBackTapSensitivity(name: String) { _backTapSensitivity.value = name }
 }
 
 class FakeDeviceSmsSource(

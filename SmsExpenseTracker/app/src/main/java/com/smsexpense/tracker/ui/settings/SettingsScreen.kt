@@ -48,6 +48,7 @@ fun SettingsScreen(
     onChooseFromSms: () -> Unit = {},
     onImportHistorical: () -> Unit = {},
     onOpenUpdates: () -> Unit = {},
+    onOpenQuickLaunch: () -> Unit = {},
     onDebugUnlocked: () -> Unit = {},
     versionLabel: String = "",
 ) {
@@ -215,6 +216,19 @@ fun SettingsScreen(
                         viewModel.setApiAuthToken(token)
                     }) { Text("Save server settings") }
                 }
+            }
+
+            // --- Quick launch ---
+            SectionCard(title = "Quick launch") {
+                Text(
+                    "Open quick actions from anywhere: a Quick Settings tile, a home screen " +
+                        "shortcut, a back tap, or the power button.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onOpenQuickLaunch,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Set up quick launch") }
             }
 
             // --- Updates + about ---
