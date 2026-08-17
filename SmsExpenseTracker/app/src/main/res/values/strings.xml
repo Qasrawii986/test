@@ -316,4 +316,57 @@
     <string name="import_scanned_summary">%1$d messages scanned</string>
     <string name="import_scanned_with_imported">%1$d messages scanned, %2$d already imported</string>
     <string name="picker_senders_prompt">The selected messages come from %1$d different senders. Choose which ones to add:</string>
+
+    <!-- Expense distribution / payers -->
+    <string name="payer_you">You</string>
+    <string name="payers_title">Payers &amp; sharing</string>
+    <string name="payers_subtitle">Decide who actually carries each expense. Anything you do not charge to someone else stays your own share.</string>
+    <string name="payers_section">People</string>
+    <string name="payers_add">Add payer</string>
+    <string name="payers_edit">Edit payer</string>
+    <string name="payer_name">Name</string>
+    <string name="payer_emoji">Emoji</string>
+    <string name="payer_name_hint">e.g. Dad, Home, Ahmad</string>
+    <string name="payers_empty">No one added yet. Add the people you share expenses with — a parent, a flatmate, a shared household pot.</string>
+    <string name="payers_self_note">This is you. Your own share is always whatever is left after charging others.</string>
+    <string name="payer_delete_title">Remove %1$s?</string>
+    <string name="payer_delete_message">Their %1$d charged expense(s) go back to being fully yours. Payments themselves are not deleted.</string>
+    <string name="payer_delete_message_empty">Nothing is charged to them, so no expenses change.</string>
+    <string name="payers_outstanding">Outstanding</string>
+    <string name="payer_owes_you">%1$s owes you</string>
+    <string name="payer_settle">Mark as paid back</string>
+    <string name="payer_reopen">Reopen</string>
+    <string name="payer_all_settled">All settled up</string>
+    <string name="payer_owed_count">%1$d expense(s)</string>
+    <string name="settings_payers">Payers &amp; expense sharing</string>
+    <string name="settings_payers_desc">Charge expenses to someone else and track what you are owed</string>
+
+    <!-- Split editor -->
+    <string name="split_title">Split this expense</string>
+    <string name="split_who_pays">Who pays</string>
+    <string name="split_all_mine">All mine</string>
+    <string name="split_charge_all">All to %1$s</string>
+    <string name="split_evenly">Split evenly</string>
+    <string name="split_your_share">Your share</string>
+    <string name="split_charged_to_others">Charged to others</string>
+    <string name="split_over_allocated">That is more than the payment total.</string>
+    <string name="split_save">Save split</string>
+    <string name="split_shared">Shared</string>
+    <string name="split_settled_label">Paid back</string>
+    <string name="split_no_payers">Add someone in Settings › Payers &amp; expense sharing first.</string>
+    <string name="split_manage_payers">Manage payers</string>
+
+    <!-- Editing a detected payment -->
+    <string name="edit_details">Edit details</string>
+    <string name="edit_merchant">Merchant or person</string>
+    <string name="edit_amount">Amount</string>
+    <string name="edit_amount_invalid">Enter an amount greater than zero.</string>
+    <string name="edit_save">Save</string>
+    <string name="edit_cancel">Cancel</string>
+
+    <!-- Dashboard sharing -->
+    <string name="dashboard_your_share">Your share</string>
+    <string name="dashboard_total_paid">Total paid %1$s</string>
+    <string name="dashboard_owed_title">Owed to you</string>
+    <string name="dashboard_show_my_share">My share only</string>
 </resources>

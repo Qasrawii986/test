@@ -153,7 +153,11 @@ class MainActivity : ComponentActivity() {
             composable("dashboard") {
                 val vm: DashboardViewModel = viewModel(
                     factory = SimpleFactory {
-                        DashboardViewModel(container.paymentRepository, container.categoryRepository)
+                        DashboardViewModel(
+                            container.paymentRepository,
+                            container.categoryRepository,
+                            container.splitRepository,
+                        )
                     }
                 )
                 DashboardScreen(
@@ -178,6 +182,7 @@ class MainActivity : ComponentActivity() {
                             paymentId = paymentId,
                             paymentRepository = container.paymentRepository,
                             categoryRepository = container.categoryRepository,
+                            splitRepository = container.splitRepository,
                             onCategorized = { SyncScheduler.scheduleIfEnabled(this@MainActivity) },
                         )
                     }
@@ -202,8 +207,23 @@ class MainActivity : ComponentActivity() {
                     onOpenUpdates = { navController.navigate("updates") },
                     onOpenQuickLaunch = { navController.navigate("quickLaunch") },
                     onOpenNotificationSource = { navController.navigate("notificationSource") },
+                    onOpenPayers = { navController.navigate("payers") },
                     onDebugUnlocked = { navController.navigate("debug") },
                     versionLabel = "Version ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})",
+                )
+            }
+            composable("payers") {
+                val vm: com.smsexpense.tracker.ui.payers.PayersViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.payers.PayersViewModel(
+                            splitRepository = container.splitRepository,
+                            settingsRepository = container.settingsRepository,
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.payers.PayersScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("notificationSource") {

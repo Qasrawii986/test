@@ -170,6 +170,54 @@ timestamp). Each successful import is recorded in **Import History**.
 The daily flow (SMS → bubble → one tap) is untouched — historical review never
 appears for new incoming messages.
 
+## Expense distribution — who actually pays (v1.10)
+
+Not every expense that leaves your account is your own cost. Household bills
+your father reimburses and your personal spending both arrive as the same bank
+SMS, so the app lets you say who carries each one.
+
+**Payers.** Settings › *Payers & expense sharing* holds the people you share
+costs with. One payer is always you (it cannot be deleted, and its label is
+translated rather than stored).
+
+**How a split is recorded.** Only the parts charged to *other* people are
+stored. Your own share is always the remainder:
+
+```
+your share = payment total − everything charged to others
+```
+
+That single rule is why every payment recorded before this feature existed is
+still correctly 100% yours — there is no backfill to get wrong — and why a
+split can never quietly stop adding up to the payment.
+
+**From the bubble.** The expanded panel gained:
+
+- a row of payer chips — one tap charges the whole expense to that person (or
+  back to yourself),
+- **✂️ Split** — explicit amounts per person, with *split evenly* / *all mine*
+  shortcuts and your share shown live,
+- **✏️ Edit** — fix the merchant/person name and the amount the parser read.
+
+Text input needs a focusable window, so opening either editor temporarily drops
+`FLAG_NOT_FOCUSABLE`, parks the panel clear of the keyboard, and suspends the
+auto-hide timer; closing it restores all three.
+
+**Settling up.** What each person owes you is tracked separately from your
+share: marking a debt as paid back clears the *owed* figure and leaves your
+share of that expense unchanged. Debts do not reset at month end — the payers
+screen shows the all-time outstanding total, the dashboard shows the current
+month's.
+
+**Reporting.** Once anything is shared, the dashboard headline becomes **your
+share**, with the gross figure kept on the line beneath it, and the
+by-category breakdown reports your own cost per category so it adds up to the
+headline instead of contradicting it. Shared payments are badged ✂️ in lists.
+
+Deleting a payer removes their charges, so those expenses go back to being
+fully yours; the payments themselves are never deleted. The confirmation
+dialog states how many expenses are affected.
+
 ## Server sync (optional, off by default)
 
 The app is **offline-first**: Room is the source of truth and nothing requires
@@ -207,7 +255,7 @@ app/src/main/java/com/smsexpense/tracker/
 │   ├── remote/       PaymentApiClient abstraction + OkHttp impl + DTO
 │   └── repository/   Room/DataStore implementations of domain interfaces
 ├── domain/
-│   ├── model/        Payment, Category, PaymentCandidate, IncomingMessage, ...
+│   ├── model/        Payment, Category, Payer, Allocation, PaymentSplit, ...
 │   ├── parser/       SmsParser (signals + confidence), AmountNormalizer, DedupKey
 │   ├── repository/   Repository interfaces (domain never sees Room)
 │   ├── source/       PaymentMessageSource abstraction (SMS today, notifications later)
@@ -243,7 +291,7 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 
 ## Tests
 
-91 unit tests run on the JVM (no device needed):
+201 unit tests run on the JVM (no device needed):
 
 - `SmsParserTest` — Arabic/English payments, currencies, decimal separators,
   Arabic-Indic digits, multipart bodies, merchants, salary/transfer/OTP/refund
@@ -261,6 +309,17 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
   flow, no duplicate sender IDs.
 - `HistoricalImportViewModelTest` — selection, select-all toggle, bulk
   category, per-item category, confirmation, sync hook.
+- `PaymentSplitTest` — the split arithmetic: no allocations means fully yours,
+  partial charges leave the remainder, over-allocation is flagged and never
+  yields a negative share, rounding noise is tolerated.
+- `SplitRepositoryTest` — Robolectric + Room: the self payer is never stored as
+  an allocation, charging back to yourself clears the split, settling does not
+  change your share, re-saving an unchanged amount keeps a paid debt settled
+  while changing it re-opens it, period-scoped vs all-time owed totals,
+  deleting a payer or a payment cascades correctly.
+- `PayersViewModelTest` — seeding, validation, outstanding/settle/reopen.
+- `MigrationTest` — also covers v3 → v4: the sharing tables are added and
+  pre-existing payments stay fully yours.
 - `MainFlowTest` (androidTest) — full UI flow on a device: create category →
   simulate payment → categorize → dashboard updates.
 

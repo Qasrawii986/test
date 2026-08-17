@@ -35,6 +35,8 @@ import com.smsexpense.tracker.R
 fun PaymentRow(
     payment: Payment,
     category: Category?,
+    /** Part of this payment is charged to someone else. */
+    shared: Boolean = false,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -56,7 +58,11 @@ fun PaymentRow(
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = formatDateTime(payment.timestamp),
+                    text = if (shared) {
+                        "${formatDateTime(payment.timestamp)} • ✂️ ${stringResource(R.string.split_shared)}"
+                    } else {
+                        formatDateTime(payment.timestamp)
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

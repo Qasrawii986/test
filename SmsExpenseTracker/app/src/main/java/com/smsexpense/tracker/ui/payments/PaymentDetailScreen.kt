@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -27,6 +28,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +47,8 @@ fun PaymentDetailScreen(
     onBack: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
+    var editingDetails by remember { mutableStateOf(false) }
+    var editingSplit by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -76,13 +82,82 @@ fun PaymentDetailScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = formatAmount(payment.amount, payment.currency),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-            )
-            payment.merchant?.let {
-                Text(it, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = formatAmount(payment.amount, payment.currency),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    payment.merchant?.let {
+                        Text(it, style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                IconButton(onClick = { editingDetails = true }) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit_details),
+                    )
+                }
+            }
+
+            // Who carries this expense. Shown before the category because a
+            // reimbursed expense is often categorized differently.
+            val split = state.split
+            if (state.payers.isNotEmpty() && split != null) {
+                Text(stringResource(R.string.split_who_pays), style = MaterialTheme.typography.titleMedium)
+                com.smsexpense.tracker.ui.components.PayerChips(
+                    payers = state.payers,
+                    split = split,
+                    onChargeWholeTo = { viewModel.chargeWholeTo(it) },
+                    onSplitClick = { editingSplit = true },
+                )
+                if (!split.isFullyMine) {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            com.smsexpense.tracker.ui.components.SplitSummary(
+                                payers = state.payers,
+                                split = split,
+                            )
+                            split.allocations.forEach { allocation ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                ) {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            viewModel.setAllocationSettled(
+                                                allocation.id, !allocation.settled,
+                                            )
+                                        },
+                                    ) {
+                                        Text(
+                                            if (allocation.settled) {
+                                                stringResource(R.string.payer_reopen)
+                                            } else {
+                                                stringResource(R.string.payer_settle)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (editingSplit) {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        com.smsexpense.tracker.ui.components.SplitEditor(
+                            payers = state.payers,
+                            split = split,
+                            onSave = {
+                                viewModel.saveSplit(it)
+                                editingSplit = false
+                            },
+                            onCancel = { editingSplit = false },
+                            modifier = Modifier.padding(12.dp),
+                        )
+                    }
+                }
             }
 
             DetailRow(stringResource(R.string.payment_date), formatDate(payment.timestamp))
@@ -117,7 +192,75 @@ fun PaymentDetailScreen(
             }
             Spacer(Modifier.height(24.dp))
         }
+
+        if (editingDetails) {
+            EditDetailsDialog(
+                initialMerchant = payment.merchant.orEmpty(),
+                initialAmount = com.smsexpense.tracker.ui.components.trimAmount(payment.amount),
+                onConfirm = { merchant, amount ->
+                    viewModel.updateDetails(merchant, amount)
+                    editingDetails = false
+                },
+                onDismiss = { editingDetails = false },
+            )
+        }
     }
+}
+
+@Composable
+private fun EditDetailsDialog(
+    initialMerchant: String,
+    initialAmount: String,
+    onConfirm: (String?, Double) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var merchant by remember { mutableStateOf(initialMerchant) }
+    var amount by remember { mutableStateOf(initialAmount) }
+    val parsed = amount.trim().toDoubleOrNull()
+    val valid = parsed != null && parsed > 0.0
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.edit_details)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = merchant,
+                    onValueChange = { merchant = it },
+                    label = { Text(stringResource(R.string.edit_merchant)) },
+                    singleLine = true,
+                )
+                androidx.compose.material3.OutlinedTextField(
+                    value = amount,
+                    onValueChange = { text -> amount = text.filter { it.isDigit() || it == '.' } },
+                    label = { Text(stringResource(R.string.edit_amount)) },
+                    singleLine = true,
+                    isError = amount.isNotEmpty() && !valid,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                    ),
+                )
+                if (amount.isNotEmpty() && !valid) {
+                    Text(
+                        stringResource(R.string.edit_amount_invalid),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { onConfirm(merchant.trim().ifEmpty { null }, parsed ?: 0.0) },
+                enabled = valid,
+            ) { Text(stringResource(R.string.edit_save)) }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.edit_cancel))
+            }
+        },
+    )
 }
 
 @Composable

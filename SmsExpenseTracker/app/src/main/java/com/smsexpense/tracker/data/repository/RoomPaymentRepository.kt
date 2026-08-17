@@ -104,6 +104,15 @@ class RoomPaymentRepository(
         paymentDao.categorize(paymentId, categoryId, SyncStatus.PENDING.name)
     }
 
+    override suspend fun updateDetails(paymentId: Long, merchant: String?, amount: Double) {
+        paymentDao.updateDetails(
+            id = paymentId,
+            merchant = merchant?.trim()?.takeIf { it.isNotEmpty() },
+            amount = amount,
+            syncStatus = SyncStatus.PENDING.name,
+        )
+    }
+
     override suspend fun delete(paymentId: Long) = paymentDao.delete(paymentId)
 
     override suspend fun pendingSync(): List<Payment> =

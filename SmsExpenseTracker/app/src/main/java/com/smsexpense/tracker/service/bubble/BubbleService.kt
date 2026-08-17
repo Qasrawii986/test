@@ -37,7 +37,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
@@ -66,6 +69,14 @@ class BubbleService : Service() {
     internal val expanded = MutableStateFlow(false)
     internal val categories = MutableStateFlow<List<Category>>(emptyList())
     internal val queuedCount = MutableStateFlow(0)
+    internal val payers = MutableStateFlow<List<com.smsexpense.tracker.domain.model.Payer>>(emptyList())
+    internal val currentSplit =
+        MutableStateFlow<com.smsexpense.tracker.domain.model.PaymentSplit?>(null)
+    internal val panelMode = MutableStateFlow(BubblePanelMode.MAIN)
+    /** Follows the shown payment so edits to its amount or split appear immediately. */
+    private var watchJob: Job? = null
+    /** Where the panel sat before an editor moved it clear of the keyboard. */
+    private var positionBeforeEditing: Pair<Int, Int>? = null
     internal val appearance = MutableStateFlow(
         com.smsexpense.tracker.domain.repository.BubbleSettings(
             enabled = true, autoHideSeconds = 45,
@@ -86,6 +97,9 @@ class BubbleService : Service() {
         // Live appearance: changing size/shape/colour in settings updates the bubble.
         serviceScope.launch {
             container.settingsRepository.bubbleSettings.collect { appearance.value = it }
+        }
+        serviceScope.launch {
+            container.splitRepository.observePayers().collect { payers.value = it }
         }
     }
 
@@ -122,6 +136,11 @@ class BubbleService : Service() {
 
     private suspend fun showNext() {
         autoHideJob?.cancel()
+        watchJob?.cancel()
+        panelMode.value = BubblePanelMode.MAIN
+        currentSplit.value = null
+        setOverlayFocusable(false)
+        moveOutOfKeyboardWay(editing = false)
         while (true) {
             val nextId = queue.removeFirstOrNull()
             queuedCount.value = queue.size
@@ -140,6 +159,7 @@ class BubbleService : Service() {
             if (payment != null && payment.status == PaymentStatus.UNCATEGORIZED) {
                 currentPayment.value = payment
                 expanded.value = false
+                watchPayment(nextId)
                 ensureOverlay()
                 startAutoHideTimer()
                 return
@@ -148,8 +168,34 @@ class BubbleService : Service() {
         }
     }
 
+    /**
+     * Keeps the panel in sync with the database while it is open: correcting the
+     * amount or changing the split has to be reflected without reopening.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun watchPayment(paymentId: Long) {
+        watchJob?.cancel()
+        watchJob = serviceScope.launch {
+            container.paymentRepository.observeById(paymentId)
+                .onEach { updated -> if (updated != null) currentPayment.value = updated }
+                .flatMapLatest { updated ->
+                    if (updated == null) {
+                        kotlinx.coroutines.flow.flowOf(null)
+                    } else {
+                        container.splitRepository.observeSplit(
+                            paymentId, updated.amount, updated.currency,
+                        )
+                    }
+                }
+                .catch { AppLog.w("watching payment $paymentId failed", it) }
+                .collect { currentSplit.value = it }
+        }
+    }
+
     private fun startAutoHideTimer() {
         autoHideJob?.cancel()
+        // Never time out while the user is typing an amount or a name.
+        if (panelMode.value != BubblePanelMode.MAIN) return
         autoHideJob = serviceScope.launch {
             val seconds = container.settingsRepository.bubbleSettings.first().autoHideSeconds
             delay(seconds * 1000L)
@@ -214,8 +260,15 @@ class BubbleService : Service() {
                     onDragEnd = ::onDragFinished,
                     onCategorySelected = ::onCategorySelected,
                     onDismiss = ::onDismissed,
-                    onCollapse = { expanded.value = false },
+                    onCollapse = ::onCollapsed,
                     appearanceFlow = appearance,
+                    payersFlow = payers,
+                    splitFlow = currentSplit,
+                    modeFlow = panelMode,
+                    onModeChange = ::onPanelModeChanged,
+                    onChargeWholeTo = ::onChargeWholeTo,
+                    onSaveSplit = ::onSaveSplit,
+                    onSaveDetails = ::onSaveDetails,
                 )
             }
         }
@@ -385,6 +438,90 @@ class BubbleService : Service() {
         }
     }
 
+    private fun onCollapsed() {
+        expanded.value = false
+        onPanelModeChanged(BubblePanelMode.MAIN)
+    }
+
+    /**
+     * Text input needs a focusable window, and an overlay is created without
+     * focus so it never steals touches from the app underneath. Editing flips
+     * that for as long as the editor is open, then flips it straight back.
+     */
+    private fun onPanelModeChanged(mode: BubblePanelMode) {
+        panelMode.value = mode
+        val editing = mode != BubblePanelMode.MAIN
+        setOverlayFocusable(editing)
+        moveOutOfKeyboardWay(editing)
+        if (editing) autoHideJob?.cancel() else startAutoHideTimer()
+    }
+
+    /**
+     * The panel keeps whatever position the bubble was dragged to, which can be
+     * exactly where the keyboard is about to appear. Park it near the top while
+     * an editor is open, then put it back.
+     */
+    private fun moveOutOfKeyboardWay(editing: Boolean) {
+        val params = layoutParams ?: return
+        val view = overlayView ?: return
+        if (editing) {
+            if (positionBeforeEditing == null) positionBeforeEditing = params.x to params.y
+            params.x = EDGE_MARGIN_PX
+            params.y = TOP_MARGIN_WHILE_EDITING_PX
+        } else {
+            val restored = positionBeforeEditing ?: return
+            params.x = restored.first
+            params.y = restored.second
+            positionBeforeEditing = null
+        }
+        runCatching { windowManager?.updateViewLayout(view, params) }
+            .onFailure { AppLog.w("repositioning the panel failed", it) }
+    }
+
+    private fun setOverlayFocusable(focusable: Boolean) {
+        val params = layoutParams ?: return
+        val view = overlayView ?: return
+        val notFocusable = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        // FLAG_LAYOUT_NO_LIMITS lets the bubble sit under the status bar, but it
+        // also stops the window from being resized for the keyboard.
+        val noLimits = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        params.flags = if (focusable) {
+            params.flags and notFocusable.inv() and noLimits.inv()
+        } else {
+            params.flags or notFocusable or noLimits
+        }
+        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        runCatching { windowManager?.updateViewLayout(view, params) }
+            .onFailure { AppLog.w("toggling overlay focus failed", it) }
+    }
+
+    private fun onChargeWholeTo(payerId: Long) {
+        val payment = currentPayment.value ?: return
+        serviceScope.launch {
+            runCatching {
+                container.splitRepository.chargeWholePayment(payment.id, payerId, payment.amount)
+            }.onFailure { AppLog.e("charging payment ${payment.id} failed", it) }
+            startAutoHideTimer()
+        }
+    }
+
+    private fun onSaveSplit(amounts: Map<Long, Double>) {
+        val payment = currentPayment.value ?: return
+        serviceScope.launch {
+            runCatching { container.splitRepository.setSplit(payment.id, amounts) }
+                .onFailure { AppLog.e("saving split for ${payment.id} failed", it) }
+        }
+    }
+
+    private fun onSaveDetails(merchant: String?, amount: Double) {
+        val payment = currentPayment.value ?: return
+        serviceScope.launch {
+            runCatching {
+                container.paymentRepository.updateDetails(payment.id, merchant, amount)
+            }.onFailure { AppLog.e("editing payment ${payment.id} failed", it) }
+        }
+    }
+
     private fun onDismissed() {
         serviceScope.launch { showNext() }
     }
@@ -409,6 +546,7 @@ class BubbleService : Service() {
 
     override fun onDestroy() {
         autoHideJob?.cancel()
+        watchJob?.cancel()
         hideTrashTarget()
         removeOverlay()
         serviceScope.cancel()
@@ -447,5 +585,6 @@ class BubbleService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bubble"
         private const val EDGE_MARGIN_PX = 8
+        private const val TOP_MARGIN_WHILE_EDITING_PX = 48
     }
 }

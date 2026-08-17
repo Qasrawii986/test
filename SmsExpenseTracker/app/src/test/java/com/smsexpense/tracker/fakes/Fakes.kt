@@ -110,6 +110,16 @@ class FakePaymentRepository : PaymentRepository {
         }
     }
 
+    override suspend fun updateDetails(paymentId: Long, merchant: String?, amount: Double) {
+        payments.value = payments.value.map {
+            if (it.id == paymentId) it.copy(
+                merchant = merchant?.trim()?.takeIf { name -> name.isNotEmpty() },
+                amount = amount,
+                syncStatus = SyncStatus.PENDING,
+            ) else it
+        }
+    }
+
     override suspend fun delete(paymentId: Long) {
         payments.value = payments.value.filterNot { it.id == paymentId }
     }
@@ -291,4 +301,183 @@ class FakeImportHistoryRepository : com.smsexpense.tracker.domain.repository.Imp
     }
 
     override fun observeAll(): Flow<List<com.smsexpense.tracker.domain.model.ImportRecord>> = records
+}
+
+/**
+ * In-memory split repository mirroring the Room one's rules: allocations are
+ * only ever recorded for payers other than yourself, so "my share" stays the
+ * remainder of the payment.
+ */
+class FakeSplitRepository : com.smsexpense.tracker.domain.repository.SplitRepository {
+
+    private val payers = MutableStateFlow<List<com.smsexpense.tracker.domain.model.Payer>>(emptyList())
+    private val allocations =
+        MutableStateFlow<List<com.smsexpense.tracker.domain.model.Allocation>>(emptyList())
+    /** Payment timestamps, so period-scoped queries can be exercised. */
+    private val timestamps = mutableMapOf<Long, Long>()
+    /** Category of each payment, for the per-category breakdown. */
+    private val categoryOf = mutableMapOf<Long, Long?>()
+    private var nextPayerId = 1L
+    private var nextAllocationId = 1L
+
+    fun registerPayment(paymentId: Long, timestamp: Long, categoryId: Long? = null) {
+        timestamps[paymentId] = timestamp
+        categoryOf[paymentId] = categoryId
+    }
+
+    fun allocationsOf(paymentId: Long) = allocations.value.filter { it.paymentId == paymentId }
+
+    override fun observePayers(): Flow<List<com.smsexpense.tracker.domain.model.Payer>> = payers
+
+    override suspend fun getPayers(): List<com.smsexpense.tracker.domain.model.Payer> = payers.value
+
+    override suspend fun selfPayerId(): Long? = payers.value.find { it.isSelf }?.id
+
+    override suspend fun seedSelfIfEmpty() {
+        if (payers.value.any { it.isSelf }) return
+        payers.value = payers.value + com.smsexpense.tracker.domain.model.Payer(
+            id = nextPayerId++, name = "You", emoji = "🙋", color = null,
+            isSelf = true, sortOrder = 0, createdAt = 0L,
+        )
+    }
+
+    override suspend fun addPayer(name: String, emoji: String, color: Long?): Long {
+        val payer = com.smsexpense.tracker.domain.model.Payer(
+            id = nextPayerId++, name = name.trim(), emoji = emoji.ifBlank { "👤" },
+            color = color, isSelf = false, sortOrder = payers.value.size, createdAt = 0L,
+        )
+        payers.value = payers.value + payer
+        return payer.id
+    }
+
+    override suspend fun updatePayer(payer: com.smsexpense.tracker.domain.model.Payer) {
+        payers.value = payers.value.map {
+            if (it.id == payer.id) payer.copy(isSelf = it.isSelf) else it
+        }
+    }
+
+    override suspend fun deletePayer(id: Long) {
+        if (payers.value.find { it.id == id }?.isSelf == true) return
+        payers.value = payers.value.filterNot { it.id == id }
+        allocations.value = allocations.value.filterNot { it.payerId == id }
+    }
+
+    override suspend fun chargedCount(payerId: Long): Int =
+        allocations.value.count { it.payerId == payerId }
+
+    override fun observeSplit(
+        paymentId: Long,
+        total: Double,
+        currency: String,
+    ): Flow<com.smsexpense.tracker.domain.model.PaymentSplit> = allocations.map { list ->
+        com.smsexpense.tracker.domain.model.PaymentSplit(
+            paymentId, total, currency, list.filter { it.paymentId == paymentId },
+        )
+    }
+
+    override suspend fun getSplit(
+        paymentId: Long,
+        total: Double,
+        currency: String,
+    ) = com.smsexpense.tracker.domain.model.PaymentSplit(
+        paymentId, total, currency, allocationsOf(paymentId),
+    )
+
+    override suspend fun setSplit(paymentId: Long, amountsByPayer: Map<Long, Double>) {
+        val selfId = selfPayerId()
+        val previouslySettled = allocationsOf(paymentId).filter { it.settled }
+            .associate { it.payerId to it.amount }
+        val wanted = amountsByPayer
+            .filterKeys { it != selfId }
+            .filterValues { it > com.smsexpense.tracker.domain.model.PaymentSplit.CENT }
+        allocations.value = allocations.value.filterNot { it.paymentId == paymentId } +
+            wanted.map { (payerId, amount) ->
+                com.smsexpense.tracker.domain.model.Allocation(
+                    id = nextAllocationId++,
+                    paymentId = paymentId,
+                    payerId = payerId,
+                    amount = amount,
+                    settled = previouslySettled[payerId]?.let {
+                        kotlin.math.abs(it - amount) <
+                            com.smsexpense.tracker.domain.model.PaymentSplit.CENT
+                    } ?: false,
+                )
+            }
+    }
+
+    override suspend fun chargeWholePayment(paymentId: Long, payerId: Long, total: Double) {
+        if (payerId == selfPayerId()) {
+            allocations.value = allocations.value.filterNot { it.paymentId == paymentId }
+            return
+        }
+        setSplit(paymentId, mapOf(payerId to total))
+    }
+
+    private fun inPeriod(paymentId: Long, from: Long, to: Long): Boolean {
+        val ts = timestamps[paymentId] ?: return true
+        return ts >= from && ts < to
+    }
+
+    override fun observeOwedBetween(
+        from: Long,
+        to: Long,
+    ): Flow<List<com.smsexpense.tracker.domain.model.OwedTotal>> = allocations.map { list ->
+        list.filter { !it.settled && inPeriod(it.paymentId, from, to) }
+            .groupBy { it.payerId }
+            .map { (payerId, group) ->
+                com.smsexpense.tracker.domain.model.OwedTotal(
+                    payerId, group.sumOf { it.amount }, group.size,
+                )
+            }
+    }
+
+    override fun observeOwedAllTime(): Flow<List<com.smsexpense.tracker.domain.model.OwedTotal>> =
+        allocations.map { list ->
+            list.filter { !it.settled }
+                .groupBy { it.payerId }
+                .map { (payerId, group) ->
+                    com.smsexpense.tracker.domain.model.OwedTotal(
+                        payerId, group.sumOf { it.amount }, group.size,
+                    )
+                }
+        }
+
+    override fun observeChargedToOthersBetween(from: Long, to: Long): Flow<Double> =
+        allocations.map { list ->
+            list.filter { inPeriod(it.paymentId, from, to) }.sumOf { it.amount }
+        }
+
+    override fun observeChargedToOthersByCategoryBetween(
+        from: Long,
+        to: Long,
+    ): Flow<List<com.smsexpense.tracker.domain.model.CategoryTotal>> = allocations.map { list ->
+        list.filter { inPeriod(it.paymentId, from, to) }
+            .groupBy { categoryOf[it.paymentId] }
+            .map { (categoryId, group) ->
+                CategoryTotal(categoryId, group.sumOf { it.amount }, group.size)
+            }
+    }
+
+    override fun observeSharedPaymentIdsBetween(from: Long, to: Long): Flow<Set<Long>> =
+        allocations.map { list ->
+            list.filter { inPeriod(it.paymentId, from, to) }.map { it.paymentId }.toSet()
+        }
+
+    override suspend fun settleAllFor(payerId: Long) {
+        allocations.value = allocations.value.map {
+            if (it.payerId == payerId) it.copy(settled = true) else it
+        }
+    }
+
+    override suspend fun unsettleAllFor(payerId: Long) {
+        allocations.value = allocations.value.map {
+            if (it.payerId == payerId) it.copy(settled = false) else it
+        }
+    }
+
+    override suspend fun setSettled(allocationId: Long, settled: Boolean) {
+        allocations.value = allocations.value.map {
+            if (it.id == allocationId) it.copy(settled = settled) else it
+        }
+    }
 }

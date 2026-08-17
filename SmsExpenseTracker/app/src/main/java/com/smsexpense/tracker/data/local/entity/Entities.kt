@@ -2,6 +2,7 @@ package com.smsexpense.tracker.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -32,6 +33,49 @@ data class PaymentEntity(
     // Added in DB v2. Default keeps rows from v1 valid (they were all realtime SMS).
     @ColumnInfo(defaultValue = "SMS_REALTIME")
     val source: String = "SMS_REALTIME",
+)
+
+@Entity(tableName = "payers")
+data class PayerEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val emoji: String,
+    val color: Long?,
+    /** The one payer representing the app's owner. Exactly one row has this set. */
+    val isSelf: Boolean,
+    val sortOrder: Int,
+    val createdAt: Long,
+)
+
+@Entity(
+    tableName = "allocations",
+    indices = [
+        Index(value = ["paymentId"]),
+        Index(value = ["payerId"]),
+        Index(value = ["settled"]),
+    ],
+    foreignKeys = [
+        ForeignKey(
+            entity = PaymentEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["paymentId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = PayerEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["payerId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+)
+data class AllocationEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val paymentId: Long,
+    val payerId: Long,
+    val amount: Double,
+    /** Reimbursed / squared up. Only meaningful for payers other than yourself. */
+    val settled: Boolean = false,
 )
 
 @Entity(tableName = "import_history")

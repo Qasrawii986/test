@@ -89,6 +89,11 @@ class AppLocaleTest {
             R.string.ql_tile_title, R.string.ql_sensor_warning, R.string.blocker_no_overlay,
             R.string.backtap_notification_text, R.string.panel_notification_title,
             R.string.appearance_shape_circle, R.string.position_snap,
+            R.string.payers_title, R.string.payers_subtitle, R.string.payer_you,
+            R.string.split_title, R.string.split_who_pays, R.string.split_your_share,
+            R.string.split_evenly, R.string.payer_settle, R.string.edit_details,
+            R.string.edit_merchant, R.string.edit_amount, R.string.dashboard_your_share,
+            R.string.dashboard_owed_title, R.string.settings_payers,
         ).forEach { id ->
             val text = ar.getString(id)
             assertTrue("resource $id is empty in Arabic", text.isNotBlank())

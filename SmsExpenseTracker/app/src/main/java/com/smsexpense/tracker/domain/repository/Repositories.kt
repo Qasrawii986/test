@@ -43,6 +43,8 @@ interface PaymentRepository {
     fun observeUncategorized(): Flow<List<Payment>>
     fun observeMonthlyStats(year: Int, month: Int): Flow<MonthlyStats>
     suspend fun categorize(paymentId: Long, categoryId: Long)
+    /** User correction of what the parser read: the counterparty name and the amount. */
+    suspend fun updateDetails(paymentId: Long, merchant: String?, amount: Double)
     suspend fun delete(paymentId: Long)
     suspend fun pendingSync(): List<Payment>
     suspend fun markSync(paymentId: Long, status: com.smsexpense.tracker.domain.model.SyncStatus)
@@ -109,6 +111,54 @@ data class ApiSettings(
     val baseUrl: String,
     val authToken: String,
 )
+
+/**
+ * Expense distribution: who actually carries each expense.
+ *
+ * Only charges to *other* payers are stored. Your own share of a payment is
+ * always the remainder, so payments you never split need no rows at all.
+ */
+interface SplitRepository {
+    fun observePayers(): Flow<List<com.smsexpense.tracker.domain.model.Payer>>
+    suspend fun getPayers(): List<com.smsexpense.tracker.domain.model.Payer>
+    suspend fun selfPayerId(): Long?
+
+    /** Creates the "you" payer on first run. */
+    suspend fun seedSelfIfEmpty()
+    suspend fun addPayer(name: String, emoji: String, color: Long?): Long
+    suspend fun updatePayer(payer: com.smsexpense.tracker.domain.model.Payer)
+    /** Refuses to remove the "you" payer; their charges revert to being yours. */
+    suspend fun deletePayer(id: Long)
+    /** How many expenses are charged to this payer, settled or not (delete warning). */
+    suspend fun chargedCount(payerId: Long): Int
+
+    fun observeSplit(paymentId: Long, total: Double, currency: String):
+        Flow<com.smsexpense.tracker.domain.model.PaymentSplit>
+    suspend fun getSplit(paymentId: Long, total: Double, currency: String):
+        com.smsexpense.tracker.domain.model.PaymentSplit
+
+    /**
+     * Replaces the whole split. Entries for the self payer, zero amounts and
+     * negative amounts are dropped; passing an empty map makes the payment
+     * fully yours again. Already-settled charges keep their settled flag.
+     */
+    suspend fun setSplit(paymentId: Long, amountsByPayer: Map<Long, Double>)
+
+    /** One-tap: charge the entire payment to one payer (or back to yourself). */
+    suspend fun chargeWholePayment(paymentId: Long, payerId: Long, total: Double)
+
+    fun observeOwedBetween(from: Long, to: Long): Flow<List<com.smsexpense.tracker.domain.model.OwedTotal>>
+    fun observeOwedAllTime(): Flow<List<com.smsexpense.tracker.domain.model.OwedTotal>>
+    /** Money charged to other people within the period; your share is total minus this. */
+    fun observeChargedToOthersBetween(from: Long, to: Long): Flow<Double>
+    fun observeChargedToOthersByCategoryBetween(from: Long, to: Long):
+        Flow<List<com.smsexpense.tracker.domain.model.CategoryTotal>>
+    fun observeSharedPaymentIdsBetween(from: Long, to: Long): Flow<Set<Long>>
+
+    suspend fun settleAllFor(payerId: Long)
+    suspend fun unsettleAllFor(payerId: Long)
+    suspend fun setSettled(allocationId: Long, settled: Boolean)
+}
 
 interface ImportHistoryRepository {
     suspend fun record(fromDate: Long, toDate: Long, count: Int, total: Double, currency: String)

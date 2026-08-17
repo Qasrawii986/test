@@ -51,6 +51,14 @@ interface PaymentDao {
     @Query("UPDATE payments SET categoryId = NULL WHERE categoryId = :categoryId")
     suspend fun clearCategoryRefs(categoryId: Long)
 
+    /**
+     * User corrections from the bubble or the detail screen. [dedupKey] is left
+     * alone on purpose: it identifies the original message, so re-reading that
+     * SMS must still be recognised as the same payment.
+     */
+    @Query("UPDATE payments SET merchant = :merchant, amount = :amount, syncStatus = :syncStatus WHERE id = :id")
+    suspend fun updateDetails(id: Long, merchant: String?, amount: Double, syncStatus: String)
+
     @Query("DELETE FROM payments WHERE id = :id")
     suspend fun delete(id: Long)
 

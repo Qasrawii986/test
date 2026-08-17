@@ -52,6 +52,7 @@ fun SettingsScreen(
     onOpenUpdates: () -> Unit = {},
     onOpenQuickLaunch: () -> Unit = {},
     onOpenNotificationSource: () -> Unit = {},
+    onOpenPayers: () -> Unit = {},
     onDebugUnlocked: () -> Unit = {},
     versionLabel: String = "",
 ) {
@@ -168,6 +169,18 @@ fun SettingsScreen(
                     onClick = onImportHistorical,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.settings_import_button)) }
+            }
+
+            // --- Expense sharing ---
+            SectionCard(title = stringResource(R.string.settings_payers)) {
+                Text(
+                    stringResource(R.string.settings_payers_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onOpenPayers,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.payers_title)) }
             }
 
             // --- Currency ---

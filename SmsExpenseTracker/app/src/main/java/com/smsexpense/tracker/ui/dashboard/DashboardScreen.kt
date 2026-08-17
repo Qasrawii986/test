@@ -114,16 +114,81 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text(stringResource(R.string.dashboard_total_spending), style = MaterialTheme.typography.labelLarge)
+                        // Once expenses are shared, the headline is what the month
+                        // actually cost *you*; the gross figure moves to the line
+                        // underneath so neither number is lost.
                         Text(
-                            text = formatAmount(stats?.total ?: 0.0, currency),
+                            if (state.hasSharing) {
+                                stringResource(R.string.dashboard_your_share)
+                            } else {
+                                stringResource(R.string.dashboard_total_spending)
+                            },
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Text(
+                            text = formatAmount(
+                                if (state.hasSharing) state.myShare else stats?.total ?: 0.0,
+                                currency,
+                            ),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
                         )
+                        if (state.hasSharing) {
+                            Text(
+                                text = stringResource(
+                                    R.string.dashboard_total_paid,
+                                    formatAmount(stats?.total ?: 0.0, currency),
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                         Text(
                             text = stringResource(R.string.dashboard_transactions, stats?.transactionCount ?: 0),
                             style = MaterialTheme.typography.bodySmall,
                         )
+                    }
+                }
+            }
+
+            // What other people owe you from this month's expenses.
+            val owedRows = state.owed.filter { it.amount > 0.0 }
+            if (owedRows.isNotEmpty()) {
+                item {
+                    Text(
+                        stringResource(R.string.dashboard_owed_title),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                items(owedRows, key = { "owed${it.payerId}" }) { owed ->
+                    val payer = state.payers.find { it.id == owed.payerId }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        ),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(
+                                        R.string.payer_owes_you,
+                                        payer?.let { "${it.emoji} ${it.name}" } ?: "👤",
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Text(
+                                    formatAmount(owed.amount, currency),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            androidx.compose.material3.TextButton(
+                                onClick = { viewModel.settle(owed.payerId) },
+                            ) { Text(stringResource(R.string.payer_settle)) }
+                        }
                     }
                 }
             }
@@ -145,7 +210,21 @@ fun DashboardScreen(
 
             // Report view: totals roll up into the main category, with the
             // subcategory breakdown listed underneath it.
-            val perCategory = stats?.perCategory.orEmpty().filter { it.total > 0 }
+            // With sharing on, the breakdown reports your own cost per category so
+            // it adds up to the headline instead of contradicting it.
+            val othersByCategory = state.chargedToOthersByCategory.associate { it.categoryId to it.total }
+            val perCategory = stats?.perCategory.orEmpty()
+                .map { row ->
+                    if (!state.hasSharing) {
+                        row
+                    } else {
+                        row.copy(
+                            total = (row.total - (othersByCategory[row.categoryId] ?: 0.0))
+                                .coerceAtLeast(0.0),
+                        )
+                    }
+                }
+                .filter { it.total > 0 }
             if (perCategory.isNotEmpty()) {
                 val rootOf = state.categories.rootIdOf()
                 val rollup = perCategory
@@ -208,9 +287,12 @@ fun DashboardScreen(
                     Text(stringResource(R.string.dashboard_latest), style = MaterialTheme.typography.titleMedium)
                 }
                 items(state.payments, key = { it.id }) { payment ->
-                    PaymentRow(payment, categoriesById[payment.categoryId]) {
-                        onPaymentClick(payment.id)
-                    }
+                    PaymentRow(
+                        payment = payment,
+                        category = categoriesById[payment.categoryId],
+                        onClick = { onPaymentClick(payment.id) },
+                        shared = payment.id in state.sharedPaymentIds,
+                    )
                 }
             } else {
                 item {

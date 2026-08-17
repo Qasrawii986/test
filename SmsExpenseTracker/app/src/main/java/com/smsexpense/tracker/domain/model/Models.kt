@@ -80,6 +80,74 @@ data class Payment(
     val source: PaymentSource = PaymentSource.SMS_REALTIME,
 )
 
+/**
+ * Someone an expense can be charged to: yourself, a family member, a shared pot.
+ * Exactly one payer is marked [isSelf] — the share that is genuinely your cost.
+ */
+data class Payer(
+    val id: Long,
+    val name: String,
+    val emoji: String,
+    val color: Long?,
+    val isSelf: Boolean,
+    val sortOrder: Int,
+    val createdAt: Long,
+)
+
+/**
+ * Part of a payment charged to someone who is not you.
+ *
+ * Deliberately never written for the [Payer.isSelf] payer: your own share is
+ * always "whatever is left over". That keeps a payment with no allocation rows
+ * — every payment that existed before this feature — correctly 100% yours, and
+ * makes it impossible for the split to silently stop adding up to the total.
+ */
+data class Allocation(
+    val id: Long,
+    val paymentId: Long,
+    val payerId: Long,
+    val amount: Double,
+    /** They have paid you back. Settling changes what you are owed, not your share. */
+    val settled: Boolean,
+)
+
+/** How a single payment is divided, for the split editor. */
+data class PaymentSplit(
+    val paymentId: Long,
+    val total: Double,
+    val currency: String,
+    /** Only the parts charged to other people. */
+    val allocations: List<Allocation>,
+) {
+    val chargedToOthers: Double get() = allocations.sumOf { it.amount }
+
+    /** The part that is genuinely your cost. Never negative, never above the total. */
+    val myShare: Double get() = (total - chargedToOthers).coerceIn(0.0, total)
+
+    val isFullyMine: Boolean get() = allocations.isEmpty()
+
+    /** True once the whole payment is charged to other people. */
+    val isFullyCharged: Boolean get() = myShare < CENT
+
+    fun amountFor(payerId: Long): Double =
+        allocations.filter { it.payerId == payerId }.sumOf { it.amount }
+
+    /** More was assigned than the payment is worth — the editor blocks saving. */
+    val isOverAllocated: Boolean get() = chargedToOthers - total > CENT
+
+    companion object {
+        /** Half a fils: amounts are money, so compare with a tolerance. */
+        const val CENT = 0.005
+    }
+}
+
+/** What one payer still owes you over a period. */
+data class OwedTotal(
+    val payerId: Long,
+    val amount: Double,
+    val count: Int,
+)
+
 /** One row in the import history log. */
 data class ImportRecord(
     val id: Long,

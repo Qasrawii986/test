@@ -316,4 +316,57 @@
     <string name="import_scanned_summary">تم فحص %1$d رسالة</string>
     <string name="import_scanned_with_imported">تم فحص %1$d رسالة، %2$d مستوردة سابقاً</string>
     <string name="picker_senders_prompt">الرسائل المحددة من %1$d مرسلين مختلفين. اختر أيّهم تريد إضافته:</string>
+
+    <!-- Expense distribution / payers -->
+    <string name="payer_you">أنا</string>
+    <string name="payers_title">الدافعون والمشاركة</string>
+    <string name="payers_subtitle">حدّد من يتحمّل كل مصروف فعلياً. أي مبلغ لا تُحمّله لشخص آخر يبقى من حصتك.</string>
+    <string name="payers_section">الأشخاص</string>
+    <string name="payers_add">إضافة دافع</string>
+    <string name="payers_edit">تعديل الدافع</string>
+    <string name="payer_name">الاسم</string>
+    <string name="payer_emoji">رمز</string>
+    <string name="payer_name_hint">مثلاً: والدي، البيت، أحمد</string>
+    <string name="payers_empty">لم تُضف أحداً بعد. أضف من تتقاسم معهم المصاريف — أحد الوالدين، شريك السكن، أو حساب مصاريف البيت.</string>
+    <string name="payers_self_note">هذا أنت. حصتك دائماً هي المتبقي بعد تحميل الآخرين.</string>
+    <string name="payer_delete_title">حذف %1$s؟</string>
+    <string name="payer_delete_message">ستعود المصاريف المحمّلة عليه (%1$d) لتكون من حصتك كاملة. العمليات نفسها لن تُحذف.</string>
+    <string name="payer_delete_message_empty">لا يوجد أي مصروف محمّل عليه، فلن يتغير شيء.</string>
+    <string name="payers_outstanding">المستحق</string>
+    <string name="payer_owes_you">%1$s يستحق عليه لك</string>
+    <string name="payer_settle">تم استرجاع المبلغ</string>
+    <string name="payer_reopen">إعادة فتح</string>
+    <string name="payer_all_settled">تمت التسوية بالكامل</string>
+    <string name="payer_owed_count">%1$d عملية</string>
+    <string name="settings_payers">الدافعون وتوزيع المصاريف</string>
+    <string name="settings_payers_desc">حمّل المصاريف على شخص آخر وتابع ما يستحق لك</string>
+
+    <!-- Split editor -->
+    <string name="split_title">توزيع هذا المصروف</string>
+    <string name="split_who_pays">من يدفع</string>
+    <string name="split_all_mine">كله عليّ</string>
+    <string name="split_charge_all">كله على %1$s</string>
+    <string name="split_evenly">تقسيم بالتساوي</string>
+    <string name="split_your_share">حصتك</string>
+    <string name="split_charged_to_others">محمّل على آخرين</string>
+    <string name="split_over_allocated">هذا أكبر من إجمالي العملية.</string>
+    <string name="split_save">حفظ التوزيع</string>
+    <string name="split_shared">مشترك</string>
+    <string name="split_settled_label">تم الاسترجاع</string>
+    <string name="split_no_payers">أضف شخصاً أولاً من الإعدادات › الدافعون وتوزيع المصاريف.</string>
+    <string name="split_manage_payers">إدارة الدافعين</string>
+
+    <!-- Editing a detected payment -->
+    <string name="edit_details">تعديل التفاصيل</string>
+    <string name="edit_merchant">المتجر أو الشخص</string>
+    <string name="edit_amount">المبلغ</string>
+    <string name="edit_amount_invalid">أدخل مبلغاً أكبر من صفر.</string>
+    <string name="edit_save">حفظ</string>
+    <string name="edit_cancel">إلغاء</string>
+
+    <!-- Dashboard sharing -->
+    <string name="dashboard_your_share">حصتك</string>
+    <string name="dashboard_total_paid">إجمالي المدفوع %1$s</string>
+    <string name="dashboard_owed_title">مستحق لك</string>
+    <string name="dashboard_show_my_share">حصتي فقط</string>
 </resources>

@@ -39,6 +39,12 @@ class AppContainer(private val app: Application) {
         RoomCategoryRepository(database.categoryDao(), database.paymentDao())
     }
 
+    val splitRepository: com.smsexpense.tracker.domain.repository.SplitRepository by lazy {
+        com.smsexpense.tracker.data.repository.RoomSplitRepository(
+            database.payerDao(), database.allocationDao(),
+        )
+    }
+
     val parser: SmsParser by lazy { SmsParser() }
 
     val apiClient: PaymentApiClient by lazy {
@@ -106,6 +112,7 @@ class SmsExpenseApp : Application() {
         }
         container.applicationScope.launch {
             container.categoryRepository.seedDefaultsIfEmpty()
+            container.splitRepository.seedSelfIfEmpty()
         }
     }
 }
