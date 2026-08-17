@@ -68,6 +68,17 @@ class FakePaymentRepository : PaymentRepository {
             kotlin.math.abs(it.timestamp - timestamp) <= windowMs
     }
 
+    override suspend fun hasCrossSourceTwin(
+        amount: Double,
+        timestamp: Long,
+        windowMs: Long,
+        source: PaymentSource,
+    ): Boolean = payments.value.any {
+        it.amount == amount &&
+            kotlin.math.abs(it.timestamp - timestamp) <= windowMs &&
+            it.source != source
+    }
+
     override suspend fun getById(id: Long): Payment? = payments.value.find { it.id == id }
 
     override fun observeById(id: Long): Flow<Payment?> = payments.map { list -> list.find { it.id == id } }
@@ -180,6 +191,15 @@ class FakeSettingsRepository(
 
     override suspend fun addSenderId(id: String) { _senderIds.value = _senderIds.value + id.trim() }
     override suspend fun removeSenderId(id: String) { _senderIds.value = _senderIds.value - id }
+
+    private val _notificationPackages = MutableStateFlow<Set<String>>(emptySet())
+    override val notificationPackages: Flow<Set<String>> = _notificationPackages
+    override suspend fun addNotificationPackage(packageName: String) {
+        _notificationPackages.value = _notificationPackages.value + packageName.trim()
+    }
+    override suspend fun removeNotificationPackage(packageName: String) {
+        _notificationPackages.value = _notificationPackages.value - packageName
+    }
     override suspend fun setDefaultCurrency(code: String) { _currency.value = code }
     override suspend fun setConfidenceThreshold(value: Float) { _threshold.value = value }
     override suspend fun setBubbleEnabled(enabled: Boolean) { _bubble.value = _bubble.value.copy(enabled = enabled) }

@@ -22,6 +22,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     private object Keys {
         val SENDER_IDS = stringSetPreferencesKey("sender_ids")
+        val NOTIFICATION_PACKAGES = stringSetPreferencesKey("notification_packages")
         val DEFAULT_CURRENCY = stringPreferencesKey("default_currency")
         val CONFIDENCE_THRESHOLD = floatPreferencesKey("confidence_threshold")
         val BUBBLE_ENABLED = booleanPreferencesKey("bubble_enabled")
@@ -137,6 +138,23 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     override suspend fun removeSenderId(id: String) {
         context.dataStore.edit {
             it[Keys.SENDER_IDS] = (it[Keys.SENDER_IDS] ?: emptySet()) - id
+        }
+    }
+
+    override val notificationPackages: Flow<Set<String>> =
+        context.dataStore.data.map { it[Keys.NOTIFICATION_PACKAGES] ?: emptySet() }
+
+    override suspend fun addNotificationPackage(packageName: String) {
+        val normalized = packageName.trim()
+        if (normalized.isEmpty()) return
+        context.dataStore.edit {
+            it[Keys.NOTIFICATION_PACKAGES] = (it[Keys.NOTIFICATION_PACKAGES] ?: emptySet()) + normalized
+        }
+    }
+
+    override suspend fun removeNotificationPackage(packageName: String) {
+        context.dataStore.edit {
+            it[Keys.NOTIFICATION_PACKAGES] = (it[Keys.NOTIFICATION_PACKAGES] ?: emptySet()) - packageName
         }
     }
 

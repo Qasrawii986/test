@@ -63,6 +63,13 @@ class RoomPaymentRepository(
         windowMs: Long,
     ): Boolean = paymentDao.countSimilar(sender, message, amount, timestamp, windowMs) > 0
 
+    override suspend fun hasCrossSourceTwin(
+        amount: Double,
+        timestamp: Long,
+        windowMs: Long,
+        source: PaymentSource,
+    ): Boolean = paymentDao.countCrossSourceTwins(amount, timestamp, windowMs, source.name) > 0
+
     override suspend fun getById(id: Long): Payment? = paymentDao.getById(id)?.toDomain()
 
     override fun observeById(id: Long): Flow<Payment?> =

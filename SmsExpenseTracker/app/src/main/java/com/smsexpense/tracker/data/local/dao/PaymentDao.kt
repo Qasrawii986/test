@@ -79,4 +79,17 @@ interface PaymentDao {
              AND amount = :amount AND ABS(timestamp - :timestamp) <= :windowMs"""
     )
     suspend fun countSimilar(sender: String, message: String, amount: Double, timestamp: Long, windowMs: Long): Int
+
+    /**
+     * The same purchase seen through a different channel: a tap payment posts a
+     * wallet notification and the bank then texts about it. Texts differ, so only
+     * amount and closeness in time can link them. Restricted to a *different*
+     * source so two genuine same-amount purchases from one channel still count twice.
+     */
+    @Query(
+        """SELECT COUNT(*) FROM payments
+           WHERE amount = :amount AND ABS(timestamp - :timestamp) <= :windowMs
+             AND source <> :source"""
+    )
+    suspend fun countCrossSourceTwins(amount: Double, timestamp: Long, windowMs: Long, source: String): Int
 }

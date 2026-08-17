@@ -29,6 +29,8 @@ class IngestPaymentMessageUseCase(
     suspend operator fun invoke(
         message: IncomingMessage,
         skipSenderFilter: Boolean = false,
+        source: com.smsexpense.tracker.domain.model.PaymentSource =
+            com.smsexpense.tracker.domain.model.PaymentSource.SMS_REALTIME,
     ): IngestOutcome {
         if (!skipSenderFilter) {
             val allowed = settingsRepository.senderIds.first()
@@ -53,12 +55,40 @@ class IngestPaymentMessageUseCase(
                 val withCurrency = if (candidate.currency.isBlank()) {
                     candidate.copy(currency = settingsRepository.defaultCurrency.first())
                 } else candidate
-                when (val result = paymentRepository.ingest(withCurrency)) {
+
+                // A notification can be re-posted with a fresh timestamp, which would
+                // otherwise slip past the exact dedup key.
+                if (source == com.smsexpense.tracker.domain.model.PaymentSource.NOTIFICATION &&
+                    paymentRepository.hasSimilar(
+                        withCurrency.sender, withCurrency.originalMessage,
+                        withCurrency.amount, withCurrency.timestamp, REPOST_WINDOW_MS,
+                    )
+                ) {
+                    return IngestOutcome.DuplicateIgnored
+                }
+
+                // The same purchase arriving through another channel (wallet
+                // notification + bank SMS) must not be counted twice.
+                if (paymentRepository.hasCrossSourceTwin(
+                        withCurrency.amount, withCurrency.timestamp, CROSS_SOURCE_WINDOW_MS, source,
+                    )
+                ) {
+                    return IngestOutcome.DuplicateIgnored
+                }
+
+                when (val result = paymentRepository.ingest(withCurrency, source)) {
                     is IngestResult.Inserted ->
                         IngestOutcome.PaymentSaved(result.paymentId, withCurrency.confidence)
                     IngestResult.Duplicate -> IngestOutcome.DuplicateIgnored
                 }
             }
         }
+    }
+
+    companion object {
+        /** A notification updated in place still describes the same payment. */
+        const val REPOST_WINDOW_MS = 5 * 60 * 1000L
+        /** Wallet notification and bank SMS for one purchase arrive minutes apart. */
+        const val CROSS_SOURCE_WINDOW_MS = 10 * 60 * 1000L
     }
 }

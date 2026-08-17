@@ -29,6 +29,14 @@ interface PaymentRepository {
 
     /** Cross-source duplicate guard (SMSC vs inbox timestamps differ for the same SMS). */
     suspend fun hasSimilar(sender: String, message: String, amount: Double, timestamp: Long, windowMs: Long): Boolean
+
+    /** Same amount at nearly the same time, seen through a different channel. */
+    suspend fun hasCrossSourceTwin(
+        amount: Double,
+        timestamp: Long,
+        windowMs: Long,
+        source: com.smsexpense.tracker.domain.model.PaymentSource,
+    ): Boolean
     suspend fun getById(id: Long): Payment?
     fun observeById(id: Long): Flow<Payment?>
     fun observeMonth(year: Int, month: Int): Flow<List<Payment>>
@@ -109,6 +117,8 @@ interface ImportHistoryRepository {
 
 interface SettingsRepository {
     val senderIds: Flow<Set<String>>
+    /** App packages whose notifications are scanned for payments. */
+    val notificationPackages: Flow<Set<String>>
     val defaultCurrency: Flow<String>
     val confidenceThreshold: Flow<Float>
     val bubbleSettings: Flow<BubbleSettings>
@@ -125,6 +135,8 @@ interface SettingsRepository {
 
     suspend fun addSenderId(id: String)
     suspend fun removeSenderId(id: String)
+    suspend fun addNotificationPackage(packageName: String)
+    suspend fun removeNotificationPackage(packageName: String)
     suspend fun setDefaultCurrency(code: String)
     suspend fun setConfidenceThreshold(value: Float)
     suspend fun setBubbleEnabled(enabled: Boolean)

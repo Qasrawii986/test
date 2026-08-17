@@ -49,6 +49,7 @@ fun SettingsScreen(
     onImportHistorical: () -> Unit = {},
     onOpenUpdates: () -> Unit = {},
     onOpenQuickLaunch: () -> Unit = {},
+    onOpenNotificationSource: () -> Unit = {},
     onDebugUnlocked: () -> Unit = {},
     versionLabel: String = "",
 ) {
@@ -116,6 +117,19 @@ fun SettingsScreen(
                     onClick = onChooseFromSms,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Choose from SMS") }
+            }
+
+            // --- Notification source ---
+            SectionCard(title = "Payment notifications") {
+                Text(
+                    "Also capture payments from wallet and bank app notifications — useful " +
+                        "for contactless taps, which often notify before the bank texts.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onOpenNotificationSource,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Choose apps to watch") }
             }
 
             // --- Historical import ---

@@ -188,8 +188,23 @@ class MainActivity : ComponentActivity() {
                     onImportHistorical = { navController.navigate("historicalImport") },
                     onOpenUpdates = { navController.navigate("updates") },
                     onOpenQuickLaunch = { navController.navigate("quickLaunch") },
+                    onOpenNotificationSource = { navController.navigate("notificationSource") },
                     onDebugUnlocked = { navController.navigate("debug") },
                     versionLabel = "Version ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})",
+                )
+            }
+            composable("notificationSource") {
+                val vm: com.smsexpense.tracker.ui.notifications.NotificationSourceViewModel = viewModel(
+                    factory = SimpleFactory {
+                        com.smsexpense.tracker.ui.notifications.NotificationSourceViewModel(
+                            application = application,
+                            settings = container.settingsRepository,
+                        )
+                    }
+                )
+                com.smsexpense.tracker.ui.notifications.NotificationSourceScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("quickLaunch") {
