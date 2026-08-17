@@ -218,6 +218,25 @@ Deleting a payer removes their charges, so those expenses go back to being
 fully yours; the payments themselves are never deleted. The confirmation
 dialog states how many expenses are affected.
 
+## Bubble background & how long it stays (v1.11)
+
+**Background image.** Settings › *Bubble appearance* › *Background image* puts
+any photo inside the bubble, cropped to its shape. The picked image is **copied
+into the app's private storage**, downscaled to ~512px and centre-cropped,
+rather than stored as a `content://` URI — the overlay is drawn by a service
+that can start after a reboot, and a borrowed URI permission is exactly the
+kind of thing that silently stops working later. A scrim is drawn under the
+amount so white text stays readable on a bright photo, and the opacity slider
+fades the image along with the bubble.
+
+**How long the bubble stays.** The 180-second ceiling was only ever a slider
+limit — the stored value already allowed more. The slider now runs to **10
+minutes**, and there is a switch for **"keep the bubble until I act on it"**,
+which turns the timer off entirely. With it off the bubble waits indefinitely;
+you dismiss it by picking a category, dragging it to the bin, or tapping Later.
+The cost is that the overlay and its foreground-service notification stay up,
+so the setting says so rather than hiding it.
+
 ## Server sync (optional, off by default)
 
 The app is **offline-first**: Room is the source of truth and nothing requires
@@ -291,7 +310,7 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 
 ## Tests
 
-201 unit tests run on the JVM (no device needed):
+218 unit tests run on the JVM (no device needed):
 
 - `SmsParserTest` — Arabic/English payments, currencies, decimal separators,
   Arabic-Indic digits, multipart bodies, merchants, salary/transfer/OTP/refund
@@ -320,6 +339,12 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 - `PayersViewModelTest` — seeding, validation, outstanding/settle/reopen.
 - `MigrationTest` — also covers v3 → v4: the sharing tables are added and
   pre-existing payments stay fully yours.
+- `BubbleBackgroundStoreTest` — the picked image is copied into `filesDir`,
+  downscaled, centre-cropped square, replaces the previous file, and an
+  unreadable source returns null instead of throwing.
+- `DataStoreSettingsTest` — auto-hide clamping against the real repository:
+  0 means never rather than being raised to the minimum, out-of-range values
+  are clamped into the band.
 - `MainFlowTest` (androidTest) — full UI flow on a device: create category →
   simulate payment → categorize → dashboard updates.
 

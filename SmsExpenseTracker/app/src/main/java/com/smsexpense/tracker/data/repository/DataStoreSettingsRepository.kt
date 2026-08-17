@@ -36,6 +36,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val BUBBLE_COLOR = longPreferencesKey("bubble_color")
         val BUBBLE_OPACITY = floatPreferencesKey("bubble_opacity")
         val BUBBLE_SHOW_AMOUNT = booleanPreferencesKey("bubble_show_amount")
+        val BUBBLE_BACKGROUND = stringPreferencesKey("bubble_background_path")
         val API_ENABLED = booleanPreferencesKey("api_enabled")
         val API_BASE_URL = stringPreferencesKey("api_base_url")
         val API_AUTH_TOKEN = stringPreferencesKey("api_auth_token")
@@ -71,6 +72,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             colorArgb = it[Keys.BUBBLE_COLOR]?.takeIf { value -> value != 0L },
             opacity = it[Keys.BUBBLE_OPACITY] ?: 1f,
             showAmount = it[Keys.BUBBLE_SHOW_AMOUNT] ?: true,
+            backgroundPath = it[Keys.BUBBLE_BACKGROUND]?.takeIf { path -> path.isNotBlank() },
         )
     }
 
@@ -180,7 +182,13 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     }
 
     override suspend fun setBubbleAutoHideSeconds(seconds: Int) {
-        context.dataStore.edit { it[Keys.BUBBLE_AUTO_HIDE_SECONDS] = seconds.coerceIn(5, 600) }
+        // 0 is kept verbatim: it means "never hide", not "hide immediately".
+        val value = if (seconds <= 0) {
+            BubbleSettings.NEVER_AUTO_HIDE
+        } else {
+            seconds.coerceIn(BubbleSettings.MIN_AUTO_HIDE_SECONDS, BubbleSettings.MAX_AUTO_HIDE_SECONDS)
+        }
+        context.dataStore.edit { it[Keys.BUBBLE_AUTO_HIDE_SECONDS] = value }
     }
 
     override suspend fun setBubblePosition(xPercent: Float, yPercent: Float) {
@@ -219,6 +227,12 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
     override suspend fun setBubbleOpacity(opacity: Float) {
         context.dataStore.edit {
             it[Keys.BUBBLE_OPACITY] = opacity.coerceIn(BubbleSettings.MIN_OPACITY, 1f)
+        }
+    }
+
+    override suspend fun setBubbleBackground(path: String?) {
+        context.dataStore.edit {
+            if (path.isNullOrBlank()) it.remove(Keys.BUBBLE_BACKGROUND) else it[Keys.BUBBLE_BACKGROUND] = path
         }
     }
 

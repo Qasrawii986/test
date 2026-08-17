@@ -197,7 +197,9 @@ class MainActivity : ComponentActivity() {
             }
             composable("settings") {
                 val vm: SettingsViewModel = viewModel(
-                    factory = SimpleFactory { SettingsViewModel(container.settingsRepository) }
+                    factory = SimpleFactory {
+                        SettingsViewModel(application, container.settingsRepository)
+                    }
                 )
                 SettingsScreen(
                     viewModel = vm,

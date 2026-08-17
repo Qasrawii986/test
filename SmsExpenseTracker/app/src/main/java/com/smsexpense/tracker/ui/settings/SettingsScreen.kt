@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.smsexpense.tracker.domain.repository.BubbleSettings
 import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -205,19 +206,39 @@ fun SettingsScreen(
                 ToggleRow(stringResource(R.string.settings_bubble_show), state.bubble.enabled) {
                     viewModel.setBubbleEnabled(it)
                 }
-                Text(
-                    stringResource(R.string.settings_autohide, state.bubble.autoHideSeconds),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                var autoHide by remember(state.bubble.autoHideSeconds) {
-                    mutableFloatStateOf(state.bubble.autoHideSeconds.toFloat())
+                // Auto-hide: any duration up to 10 minutes, or off entirely.
+                // "Off" keeps a foreground service and an overlay alive until you
+                // act, so the trade-off is spelled out rather than hidden.
+                ToggleRow(
+                    stringResource(R.string.settings_autohide_never),
+                    state.bubble.autoHideDisabled,
+                ) { never ->
+                    viewModel.setBubbleAutoHide(
+                        if (never) BubbleSettings.NEVER_AUTO_HIDE else DEFAULT_AUTO_HIDE_SECONDS
+                    )
                 }
-                Slider(
-                    value = autoHide,
-                    onValueChange = { autoHide = it },
-                    onValueChangeFinished = { viewModel.setBubbleAutoHide(autoHide.toInt()) },
-                    valueRange = 10f..180f,
-                )
+                if (state.bubble.autoHideDisabled) {
+                    Text(
+                        stringResource(R.string.settings_autohide_never_hint),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    var autoHide by remember(state.bubble.autoHideSeconds) {
+                        mutableFloatStateOf(state.bubble.autoHideSeconds.toFloat())
+                    }
+                    Text(
+                        stringResource(R.string.settings_autohide, autoHide.toInt()),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Slider(
+                        value = autoHide,
+                        onValueChange = { autoHide = it },
+                        onValueChangeFinished = { viewModel.setBubbleAutoHide(autoHide.toInt()) },
+                        valueRange = BubbleSettings.MIN_AUTO_HIDE_SECONDS.toFloat()..
+                            BubbleSettings.MAX_AUTO_HIDE_SECONDS.toFloat(),
+                    )
+                }
             }
 
             // --- Bubble position ---
@@ -239,6 +260,8 @@ fun SettingsScreen(
                     onColorChange = viewModel::setBubbleColor,
                     onOpacityChange = viewModel::setBubbleOpacity,
                     onShowAmountChange = viewModel::setBubbleShowAmount,
+                    onBackgroundPicked = viewModel::setBubbleBackgroundFrom,
+                    onBackgroundCleared = viewModel::clearBubbleBackground,
                 )
             }
 
@@ -436,3 +459,6 @@ private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }
+
+/** Restored when auto-hide is switched back on. */
+private const val DEFAULT_AUTO_HIDE_SECONDS = 45

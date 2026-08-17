@@ -23,6 +23,7 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
+    private val application: android.app.Application,
     private val settings: SettingsRepository,
 ) : ViewModel() {
 
@@ -77,6 +78,24 @@ class SettingsViewModel(
     fun setBubbleColor(argb: Long?) = launch { settings.setBubbleColor(argb) }
     fun setBubbleOpacity(opacity: Float) = launch { settings.setBubbleOpacity(opacity) }
     fun setBubbleShowAmount(show: Boolean) = launch { settings.setBubbleShowAmount(show) }
+
+    /**
+     * Copies the picked image into private storage before storing the path, so
+     * the overlay never depends on a URI permission that can be revoked.
+     */
+    fun setBubbleBackgroundFrom(uri: android.net.Uri) = launch {
+        val path = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.smsexpense.tracker.util.BubbleBackgroundStore.save(application, uri)
+        }
+        if (path != null) settings.setBubbleBackground(path)
+    }
+
+    fun clearBubbleBackground() = launch {
+        settings.setBubbleBackground(null)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.smsexpense.tracker.util.BubbleBackgroundStore.clear(application)
+        }
+    }
     fun setApiEnabled(enabled: Boolean) = launch { settings.setApiEnabled(enabled) }
     fun setApiBaseUrl(url: String) = launch { settings.setApiBaseUrl(url) }
     fun setApiAuthToken(token: String) = launch { settings.setApiAuthToken(token) }

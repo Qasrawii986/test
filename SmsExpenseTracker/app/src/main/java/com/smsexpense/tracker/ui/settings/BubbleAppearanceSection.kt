@@ -57,6 +57,8 @@ fun BubbleAppearanceControls(
     onColorChange: (Long?) -> Unit,
     onOpacityChange: (Float) -> Unit,
     onShowAmountChange: (Boolean) -> Unit,
+    onBackgroundPicked: (android.net.Uri) -> Unit = {},
+    onBackgroundCleared: () -> Unit = {},
 ) {
     // Sliders track locally while dragging and commit on release.
     var size by remember(settings.sizeDp) { mutableIntStateOf(settings.sizeDp) }
@@ -149,6 +151,46 @@ fun BubbleAppearanceControls(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        // --- Background image ---
+        Text(stringResource(R.string.appearance_background), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(R.string.appearance_background_hint),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        // The photo picker needs no storage permission on any supported version:
+        // androidx falls back to OPEN_DOCUMENT below Android 13.
+        val pickImage = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+        ) { uri -> uri?.let(onBackgroundPicked) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = {
+                    pickImage.launch(
+                        androidx.activity.result.PickVisualMediaRequest(
+                            androidx.activity.result.contract.ActivityResultContracts
+                                .PickVisualMedia.ImageOnly,
+                        )
+                    )
+                },
+            ) {
+                Text(
+                    stringResource(
+                        if (settings.backgroundPath == null) {
+                            R.string.appearance_background_pick
+                        } else {
+                            R.string.appearance_background_change
+                        }
+                    )
+                )
+            }
+            if (settings.backgroundPath != null) {
+                androidx.compose.material3.TextButton(onClick = onBackgroundCleared) {
+                    Text(stringResource(R.string.appearance_background_remove))
+                }
+            }
+        }
 
         // --- Opacity ---
         Text(

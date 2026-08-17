@@ -369,4 +369,13 @@
     <string name="dashboard_total_paid">Total paid %1$s</string>
     <string name="dashboard_owed_title">Owed to you</string>
     <string name="dashboard_show_my_share">My share only</string>
+
+    <!-- Bubble background & auto-hide -->
+    <string name="appearance_background">Background image</string>
+    <string name="appearance_background_hint">Any photo, cropped to the bubble\'s shape. It is copied into the app, so it keeps working after a restart.</string>
+    <string name="appearance_background_pick">Choose an image</string>
+    <string name="appearance_background_change">Change image</string>
+    <string name="appearance_background_remove">Remove</string>
+    <string name="settings_autohide_never">Keep the bubble until I act on it</string>
+    <string name="settings_autohide_never_hint">The bubble and its notification stay until you pick a category, drag it to the bin, or tap Later. Slightly more battery, nothing missed.</string>
 </resources>

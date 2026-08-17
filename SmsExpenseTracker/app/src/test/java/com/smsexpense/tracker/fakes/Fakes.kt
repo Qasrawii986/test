@@ -213,7 +213,19 @@ class FakeSettingsRepository(
     override suspend fun setDefaultCurrency(code: String) { _currency.value = code }
     override suspend fun setConfidenceThreshold(value: Float) { _threshold.value = value }
     override suspend fun setBubbleEnabled(enabled: Boolean) { _bubble.value = _bubble.value.copy(enabled = enabled) }
-    override suspend fun setBubbleAutoHideSeconds(seconds: Int) { _bubble.value = _bubble.value.copy(autoHideSeconds = seconds) }
+    override suspend fun setBubbleAutoHideSeconds(seconds: Int) {
+        // Mirrors the real repository: 0 is "never", anything else is clamped.
+        _bubble.value = _bubble.value.copy(
+            autoHideSeconds = if (seconds <= 0) {
+                BubbleSettings.NEVER_AUTO_HIDE
+            } else {
+                seconds.coerceIn(
+                    BubbleSettings.MIN_AUTO_HIDE_SECONDS,
+                    BubbleSettings.MAX_AUTO_HIDE_SECONDS,
+                )
+            }
+        )
+    }
     override suspend fun setBubblePosition(xPercent: Float, yPercent: Float) {
         _bubble.value = _bubble.value.copy(
             startXPercent = xPercent.coerceIn(0f, 1f),
@@ -242,6 +254,9 @@ class FakeSettingsRepository(
     }
     override suspend fun setBubbleShowAmount(show: Boolean) {
         _bubble.value = _bubble.value.copy(showAmount = show)
+    }
+    override suspend fun setBubbleBackground(path: String?) {
+        _bubble.value = _bubble.value.copy(backgroundPath = path?.takeIf { it.isNotBlank() })
     }
     override suspend fun setApiEnabled(enabled: Boolean) { _api.value = _api.value.copy(enabled = enabled) }
     override suspend fun setApiBaseUrl(url: String) { _api.value = _api.value.copy(baseUrl = url) }

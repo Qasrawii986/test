@@ -6,6 +6,7 @@ import com.smsexpense.tracker.fakes.FakeSettingsRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -105,5 +106,65 @@ class BubbleAppearanceTest {
                 assertEquals("preset $argb must be opaque", 0xFF, alpha)
             }
         }
+    }
+
+    @Test
+    fun `the background image path round-trips and clears`() = runTest {
+        assertNull(settings.bubbleSettings.first().backgroundPath)
+
+        settings.setBubbleBackground("/data/user/0/app/files/bubble_bg_1.png")
+        assertEquals(
+            "/data/user/0/app/files/bubble_bg_1.png",
+            settings.bubbleSettings.first().backgroundPath,
+        )
+
+        settings.setBubbleBackground(null)
+        assertNull(settings.bubbleSettings.first().backgroundPath)
+    }
+
+    @Test
+    fun `a blank background path is treated as no background`() = runTest {
+        settings.setBubbleBackground("   ")
+        assertNull(settings.bubbleSettings.first().backgroundPath)
+    }
+
+    @Test
+    fun `auto-hide reaches ten minutes`() = runTest {
+        // The old UI capped the slider at 180s; the limit is the stored maximum.
+        settings.setBubbleAutoHideSeconds(600)
+        assertEquals(600, settings.bubbleSettings.first().autoHideSeconds)
+        assertFalse(settings.bubbleSettings.first().autoHideDisabled)
+    }
+
+    @Test
+    fun `auto-hide above the maximum is clamped, not rejected`() = runTest {
+        settings.setBubbleAutoHideSeconds(99_999)
+        assertEquals(
+            BubbleSettings.MAX_AUTO_HIDE_SECONDS,
+            settings.bubbleSettings.first().autoHideSeconds,
+        )
+    }
+
+    @Test
+    fun `zero means never hide rather than hide instantly`() = runTest {
+        settings.setBubbleAutoHideSeconds(BubbleSettings.NEVER_AUTO_HIDE)
+        val bubble = settings.bubbleSettings.first()
+        assertEquals(0, bubble.autoHideSeconds)
+        assertTrue(bubble.autoHideDisabled)
+    }
+
+    @Test
+    fun `a negative duration is normalised to never`() = runTest {
+        settings.setBubbleAutoHideSeconds(-30)
+        assertTrue(settings.bubbleSettings.first().autoHideDisabled)
+    }
+
+    @Test
+    fun `a too-short duration is raised to the minimum`() = runTest {
+        settings.setBubbleAutoHideSeconds(3)
+        assertEquals(
+            BubbleSettings.MIN_AUTO_HIDE_SECONDS,
+            settings.bubbleSettings.first().autoHideSeconds,
+        )
     }
 }

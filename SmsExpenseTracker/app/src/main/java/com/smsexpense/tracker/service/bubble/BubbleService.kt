@@ -198,6 +198,9 @@ class BubbleService : Service() {
         if (panelMode.value != BubblePanelMode.MAIN) return
         autoHideJob = serviceScope.launch {
             val seconds = container.settingsRepository.bubbleSettings.first().autoHideSeconds
+            // 0 means "wait until I deal with it": no timer at all. The bubble is
+            // still dismissable by dragging it to the bin or tapping Later.
+            if (seconds <= 0) return@launch
             delay(seconds * 1000L)
             // Timeout: leave the payment UNCATEGORIZED, but leave a notification
             // behind so it is never silently forgotten.

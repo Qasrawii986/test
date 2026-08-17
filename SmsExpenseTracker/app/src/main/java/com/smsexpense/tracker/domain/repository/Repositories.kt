@@ -88,12 +88,25 @@ data class BubbleSettings(
     val opacity: Float = 1f,
     /** Show the amount inside the bubble, or just an icon. */
     val showAmount: Boolean = true,
+    /**
+     * Absolute path to a picked image drawn inside the bubble, or null for a
+     * plain colour. The file lives in internal storage — a copy, not a
+     * content:// URI, so it survives reboots and needs no permission.
+     */
+    val backgroundPath: String? = null,
 ) {
+    /** Auto-hide off: the bubble waits until you act on it. */
+    val autoHideDisabled: Boolean get() = autoHideSeconds <= 0
+
     companion object {
         const val DEFAULT_SIZE_DP = 64
         const val MIN_SIZE_DP = 40
         const val MAX_SIZE_DP = 96
         const val MIN_OPACITY = 0.3f
+        /** Auto-hide bounds. 0 is the separate "never hide" case. */
+        const val MIN_AUTO_HIDE_SECONDS = 10
+        const val MAX_AUTO_HIDE_SECONDS = 600
+        const val NEVER_AUTO_HIDE = 0
         const val DEFAULT_X_PERCENT = 0.02f
         const val DEFAULT_Y_PERCENT = 0.35f
 
@@ -201,6 +214,8 @@ interface SettingsRepository {
     suspend fun setBubbleColor(argb: Long?)
     suspend fun setBubbleOpacity(opacity: Float)
     suspend fun setBubbleShowAmount(show: Boolean)
+    /** [path] null clears the picked background. */
+    suspend fun setBubbleBackground(path: String?)
     suspend fun setApiEnabled(enabled: Boolean)
     suspend fun setApiBaseUrl(url: String)
     suspend fun setApiAuthToken(token: String)

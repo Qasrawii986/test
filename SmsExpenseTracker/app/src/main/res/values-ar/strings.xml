@@ -369,4 +369,13 @@
     <string name="dashboard_total_paid">إجمالي المدفوع %1$s</string>
     <string name="dashboard_owed_title">مستحق لك</string>
     <string name="dashboard_show_my_share">حصتي فقط</string>
+
+    <!-- Bubble background & auto-hide -->
+    <string name="appearance_background">صورة خلفية</string>
+    <string name="appearance_background_hint">أي صورة، تُقصّ على شكل الفقاعة. تُنسخ داخل التطبيق فتبقى تعمل بعد إعادة التشغيل.</string>
+    <string name="appearance_background_pick">اختر صورة</string>
+    <string name="appearance_background_change">تغيير الصورة</string>
+    <string name="appearance_background_remove">إزالة</string>
+    <string name="settings_autohide_never">أبقِ الفقاعة حتى أتصرّف بها</string>
+    <string name="settings_autohide_never_hint">تبقى الفقاعة وإشعارها حتى تختار تصنيفاً أو تسحبها إلى سلة المهملات أو تضغط لاحقاً. بطارية أكثر قليلاً، ولا تفوتك عملية.</string>
 </resources>
