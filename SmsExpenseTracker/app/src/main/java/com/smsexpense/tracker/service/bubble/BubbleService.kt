@@ -197,7 +197,7 @@ class BubbleService : Service() {
         val owner = OverlayViewOwner().also { it.create() }
         viewOwner = owner
 
-        val view = ComposeView(this).apply {
+        val view = ComposeView(com.smsexpense.tracker.util.AppLocale.wrap(this)).apply {
             setViewTreeLifecycleOwner(owner)
             setViewTreeViewModelStoreOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)
@@ -322,7 +322,7 @@ class BubbleService : Service() {
         ).apply { gravity = Gravity.BOTTOM }
 
         val owner = OverlayViewOwner().also { it.create() }
-        val view = ComposeView(this).apply {
+        val view = ComposeView(com.smsexpense.tracker.util.AppLocale.wrap(this)).apply {
             setViewTreeLifecycleOwner(owner)
             setViewTreeViewModelStoreOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)

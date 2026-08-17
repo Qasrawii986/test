@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.ui.theme.AppTheme
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 /**
  * Messenger-style drop target shown at the bottom of the screen while the
@@ -59,12 +61,12 @@ fun TrashTarget(
             ) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Dismiss bubble",
+                    contentDescription = stringResource(R.string.bubble_dismiss),
                     tint = MaterialTheme.colorScheme.onError,
                 )
             }
             Text(
-                text = if (active) "Release to dismiss" else "Drag here to dismiss",
+                text = if (active) stringResource(R.string.bubble_release) else stringResource(R.string.bubble_drag_here),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 8.dp),

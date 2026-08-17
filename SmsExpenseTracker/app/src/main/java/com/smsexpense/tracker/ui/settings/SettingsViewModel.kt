@@ -19,6 +19,7 @@ data class SettingsUiState(
     val bubble: BubbleSettings = BubbleSettings(enabled = true, autoHideSeconds = 45),
     val api: ApiSettings = ApiSettings(enabled = false, baseUrl = "", authToken = ""),
     val lastBubbleStatus: String = "",
+    val language: String = com.smsexpense.tracker.util.AppLocale.SYSTEM,
 )
 
 class SettingsViewModel(
@@ -32,6 +33,7 @@ class SettingsViewModel(
         settings.bubbleSettings,
         settings.apiSettings,
         settings.lastBubbleStatus,
+        settings.language,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         SettingsUiState(
@@ -42,12 +44,25 @@ class SettingsViewModel(
             bubble = values[3] as com.smsexpense.tracker.domain.repository.BubbleSettings,
             api = values[4] as ApiSettings,
             lastBubbleStatus = values[5] as String,
+            language = values[6] as String,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     fun addSenderId(id: String) = launch { settings.addSenderId(id) }
     fun removeSenderId(id: String) = launch { settings.removeSenderId(id) }
     fun setDefaultCurrency(code: String) = launch { settings.setDefaultCurrency(code) }
+
+    /**
+     * Persists the language, updates the cached locale, then asks the caller to
+     * recreate so every already-composed screen picks up the new resources.
+     */
+    fun setLanguage(language: String, onApplied: () -> Unit) {
+        viewModelScope.launch {
+            settings.setLanguage(language)
+            com.smsexpense.tracker.util.AppLocale.prime(language)
+            onApplied()
+        }
+    }
     fun setConfidenceThreshold(value: Float) = launch { settings.setConfidenceThreshold(value) }
     fun setBubbleEnabled(enabled: Boolean) = launch { settings.setBubbleEnabled(enabled) }
     fun setBubbleAutoHide(seconds: Int) = launch { settings.setBubbleAutoHideSeconds(seconds) }

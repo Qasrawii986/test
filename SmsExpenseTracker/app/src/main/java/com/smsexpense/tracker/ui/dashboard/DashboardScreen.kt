@@ -37,6 +37,8 @@ import com.smsexpense.tracker.ui.components.MonthPicker
 import com.smsexpense.tracker.ui.components.PaymentRow
 import com.smsexpense.tracker.ui.components.colorForCategory
 import com.smsexpense.tracker.ui.components.formatAmount
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,17 +56,17 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SMS Expense") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onCategoriesClick) {
-                        Icon(Icons.Default.Category, contentDescription = "Categories")
+                        Icon(Icons.Default.Category, contentDescription = stringResource(R.string.categories))
                     }
                     IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
                     if (debugVisible) {
                         IconButton(onClick = onDebugClick) {
-                            Icon(Icons.Default.BugReport, contentDescription = "Debug")
+                            Icon(Icons.Default.BugReport, contentDescription = stringResource(R.string.debug))
                         }
                     }
                 },
@@ -112,14 +114,14 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("Total Spending", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.dashboard_total_spending), style = MaterialTheme.typography.labelLarge)
                         Text(
                             text = formatAmount(stats?.total ?: 0.0, currency),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "${stats?.transactionCount ?: 0} transactions",
+                            text = stringResource(R.string.dashboard_transactions, stats?.transactionCount ?: 0),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -129,7 +131,7 @@ fun DashboardScreen(
             if (state.uncategorized.isNotEmpty()) {
                 item {
                     Text(
-                        "Needs categorizing (${state.uncategorized.size})",
+                        stringResource(R.string.dashboard_needs_categorizing, state.uncategorized.size),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -153,7 +155,7 @@ fun DashboardScreen(
                 val maxRoot = rollup.maxOf { it.value }
 
                 item {
-                    Text("By category", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.dashboard_by_category), style = MaterialTheme.typography.titleMedium)
                 }
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
@@ -164,7 +166,7 @@ fun DashboardScreen(
                             rollup.forEachIndexed { index, (rootId, rootTotal) ->
                                 val root = rootId?.let { categoriesById[it] }
                                 CategoryBar(
-                                    label = root?.name ?: "Uncategorized",
+                                    label = root?.name ?: stringResource(R.string.uncategorized),
                                     icon = root?.icon ?: "❓",
                                     amount = rootTotal,
                                     currency = currency,
@@ -184,7 +186,7 @@ fun DashboardScreen(
                                                 .padding(start = 20.dp),
                                         ) {
                                             Text(
-                                                "${leaf?.icon ?: "❓"} ${leaf?.name ?: "Uncategorized"}",
+                                                "${leaf?.icon ?: "❓"} ${leaf?.name ?: stringResource(R.string.uncategorized)}",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.weight(1f),
                                             )
@@ -203,7 +205,7 @@ fun DashboardScreen(
 
             if (state.payments.isNotEmpty()) {
                 item {
-                    Text("Latest transactions", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.dashboard_latest), style = MaterialTheme.typography.titleMedium)
                 }
                 items(state.payments, key = { it.id }) { payment ->
                     PaymentRow(payment, categoriesById[payment.categoryId]) {
@@ -216,10 +218,10 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("No payments this month", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.dashboard_empty), style = MaterialTheme.typography.bodyLarge)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Payments appear automatically when a bank SMS arrives",
+                            stringResource(R.string.dashboard_empty_hint),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

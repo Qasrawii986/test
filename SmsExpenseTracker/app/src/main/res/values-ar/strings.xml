@@ -1,0 +1,250 @@
+<resources>
+    <string name="app_name">مصاريفي</string>
+    <string name="bubble_channel_name">فقاعة الدفع</string>
+    <string name="bubble_channel_desc">تظهر أثناء انتظار تصنيف عملية مكتشفة</string>
+    <string name="bubble_notification_title">تم اكتشاف عملية جديدة</string>
+    <string name="bubble_notification_text">اضغط على الفقاعة العائمة لتصنيفها</string>
+
+    <!-- Common -->
+    <string name="back">رجوع</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="edit">تعديل</string>
+    <string name="add">إضافة</string>
+    <string name="done">تم</string>
+    <string name="uncategorized">غير مصنّفة</string>
+    <string name="try_again">حاول مجدداً</string>
+    <string name="move_up">تحريك لأعلى</string>
+    <string name="move_down">تحريك لأسفل</string>
+    <string name="fix">إصلاح</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_total_spending">إجمالي المصاريف</string>
+    <string name="dashboard_transactions">%1$d عملية</string>
+    <string name="dashboard_needs_categorizing">بحاجة لتصنيف (%1$d)</string>
+    <string name="dashboard_by_category">حسب التصنيف</string>
+    <string name="dashboard_latest">آخر العمليات</string>
+    <string name="dashboard_empty">لا توجد عمليات هذا الشهر</string>
+    <string name="dashboard_empty_hint">تظهر العمليات تلقائياً عند وصول رسالة من البنك</string>
+    <string name="dashboard_previous_month">الشهر السابق</string>
+    <string name="dashboard_next_month">الشهر التالي</string>
+    <string name="categories">التصنيفات</string>
+    <string name="settings">الإعدادات</string>
+    <string name="debug">أدوات المطوّر</string>
+
+    <!-- Payment detail -->
+    <string name="payment">العملية</string>
+    <string name="payment_not_found">العملية غير موجودة</string>
+    <string name="payment_date">التاريخ</string>
+    <string name="payment_time">الوقت</string>
+    <string name="payment_sender">المرسل</string>
+    <string name="payment_status">الحالة</string>
+    <string name="payment_sync">المزامنة</string>
+    <string name="payment_confidence">درجة الثقة</string>
+    <string name="payment_category">التصنيف</string>
+    <string name="payment_current_category">الحالي: %1$s</string>
+    <string name="payment_original_sms">نص الرسالة الأصلي</string>
+
+    <!-- Categories -->
+    <string name="category_add_main">إضافة تصنيف رئيسي</string>
+    <string name="category_add_sub">إضافة تصنيف فرعي إلى %1$s</string>
+    <string name="category_add_sub_button">+ إضافة تصنيف فرعي</string>
+    <string name="category_add_button">إضافة تصنيف</string>
+    <string name="category_name">الاسم</string>
+    <string name="category_icon">الأيقونة (إيموجي)</string>
+    <string name="category_delete_title">حذف %1$s؟</string>
+    <string name="category_delete_with_children">سيؤدي هذا لحذف %1$d من التصنيفات الفرعية أيضاً. العمليات تبقى محفوظة لكنها تفقد تصنيفها.</string>
+    <string name="category_delete_simple">العمليات في هذا التصنيف تبقى محفوظة لكنها تفقد تصنيفها.</string>
+
+    <!-- Bubble -->
+    <string name="bubble_purchase">عملية شراء</string>
+    <string name="bubble_purchase_more">عملية شراء (+%1$d أخرى)</string>
+    <string name="bubble_later">لاحقاً</string>
+    <string name="bubble_collapse">طي</string>
+    <string name="bubble_dismiss">إخفاء الفقاعة</string>
+    <string name="bubble_drag_here">اسحب هنا للإخفاء</string>
+    <string name="bubble_release">أفلت للإخفاء</string>
+    <string name="chips_back">‹ رجوع</string>
+
+    <!-- Quick panel -->
+    <string name="panel_this_month">هذا الشهر</string>
+    <string name="panel_all_clear">لا يوجد ما ينتظر التصنيف ✅</string>
+    <string name="panel_more_in_app">+%1$d أخرى داخل التطبيق</string>
+    <string name="panel_open_app">فتح التطبيق الكامل</string>
+    <string name="close">إغلاق</string>
+
+    <!-- Permissions / onboarding -->
+    <string name="welcome">أهلاً بك</string>
+    <string name="permissions_intro">يقرأ التطبيق رسائل الدفع من بنكك ويتيح لك تصنيف كل مصروف بضغطة واحدة. يحتاج ثلاث صلاحيات ليعمل:</string>
+    <string name="perm_sms_title">قراءة الرسائل</string>
+    <string name="perm_sms_body">مطلوبة لاكتشاف رسائل الدفع لحظة وصولها من البنك. تُعالَج الرسائل على جهازك فقط.</string>
+    <string name="perm_sms_button">منح صلاحية الرسائل</string>
+    <string name="perm_overlay_title">العرض فوق التطبيقات الأخرى</string>
+    <string name="perm_overlay_body">مطلوبة لإظهار الفقاعة العائمة فوق أي تطبيق مفتوح، لتصنّف العملية دون تبديل التطبيقات.</string>
+    <string name="perm_overlay_button">فتح إعدادات العرض</string>
+    <string name="perm_notifications_title">الإشعارات</string>
+    <string name="perm_notifications_body">مطلوبة في أندرويد 13 وما بعده ليتمكن التطبيق من عرض إشعار الخدمة القصيرة خلف الفقاعة.</string>
+    <string name="perm_notifications_button">منح صلاحية الإشعارات</string>
+    <string name="skip_for_now">تخطّي الآن</string>
+    <string name="continue_label">متابعة</string>
+
+    <!-- Setup wizard -->
+    <string name="setup_lets_configure">لنقم بإعداد بنكك.</string>
+    <string name="setup_step1">الخطوة ١ — معرّف مرسل البنك</string>
+    <string name="setup_step1_hint">يقرأ التطبيق الرسائل من المرسلين الذين تختارهم هنا فقط.</string>
+    <string name="setup_choose_from_sms">اختيار من الرسائل</string>
+    <string name="setup_manual_hint">أو اكتبه يدوياً (مثال: MYBANK)</string>
+    <string name="setup_step2">الخطوة ٢ — استيراد العمليات السابقة؟</string>
+    <string name="setup_step2_hint">يمكنك فحص رسائل بنكك الحالية واستيراد العمليات القديمة. ويمكنك فعل ذلك لاحقاً من الإعدادات.</string>
+    <string name="setup_import_button">استيراد العمليات السابقة</string>
+    <string name="setup_need_sender">أضف معرّف مرسل أولاً لتفعيل الاستيراد.</string>
+
+    <!-- Settings -->
+    <string name="settings_permissions">الصلاحيات</string>
+    <string name="settings_perm_sms">قراءة الرسائل الواردة</string>
+    <string name="settings_perm_overlay">العرض فوق التطبيقات (الفقاعة)</string>
+    <string name="settings_perm_notifications">الإشعارات</string>
+    <string name="settings_overlay_missing">بدونها لا تستطيع الفقاعة الظهور — العمليات تُحفظ رغم ذلك وتصلك كإشعار يمكنك التصنيف منه.</string>
+    <string name="settings_last_payment">آخر عملية: %1$s</string>
+    <string name="settings_sender_ids">معرّفات مرسلي البنك</string>
+    <string name="settings_sender_hint">تُحلَّل الرسائل من هؤلاء المرسلين فقط. أضف اسم مرسل بنكك، مثال: MYBANK.</string>
+    <string name="settings_sender_id">معرّف المرسل</string>
+    <string name="settings_add_sender">إضافة مرسل</string>
+    <string name="settings_remove_sender">حذف %1$s</string>
+    <string name="settings_notifications_source">إشعارات الدفع</string>
+    <string name="settings_notifications_source_hint">التقاط العمليات من إشعارات المحافظ وتطبيقات البنوك أيضاً — مفيد للدفع التلامسي، إذ يصل الإشعار غالباً قبل رسالة البنك.</string>
+    <string name="settings_choose_apps">اختيار التطبيقات المراقَبة</string>
+    <string name="settings_import">الاستيراد</string>
+    <string name="settings_import_hint">فحص رسائل البنك الموجودة على الجهاز واستيراد العمليات القديمة. تُتجاهَل الرسائل المستوردة سابقاً تلقائياً.</string>
+    <string name="settings_import_button">استيراد العمليات التاريخية</string>
+    <string name="settings_currency">العملة</string>
+    <string name="settings_currency_hint">العملة الافتراضية (تُستخدم حين لا تذكرها الرسالة)</string>
+    <string name="settings_save_currency">حفظ العملة</string>
+    <string name="settings_bubble">الفقاعة</string>
+    <string name="settings_bubble_show">إظهار الفقاعة العائمة</string>
+    <string name="settings_autohide">الإخفاء التلقائي بعد %1$d ثانية (تبقى العملية غير مصنّفة)</string>
+    <string name="settings_bubble_position">موضع الفقاعة</string>
+    <string name="settings_bubble_appearance">مظهر الفقاعة</string>
+    <string name="settings_parsing">التحليل</string>
+    <string name="settings_threshold">حد الثقة: %1$d%%</string>
+    <string name="settings_threshold_hint">تُتجاهَل الرسائل التي تقل عن هذا الحد.</string>
+    <string name="settings_server">السيرفر</string>
+    <string name="settings_sync_toggle">مزامنة العمليات مع السيرفر</string>
+    <string name="settings_base_url">رابط السيرفر (مثال: https://myserver.com/api)</string>
+    <string name="settings_auth_token">رمز المصادقة (اختياري)</string>
+    <string name="settings_save_server">حفظ إعدادات السيرفر</string>
+    <string name="settings_quick_launch">الفتح السريع</string>
+    <string name="settings_quick_launch_hint">افتح الإجراءات السريعة من أي مكان: بلاطة الإعدادات السريعة، اختصار على الشاشة، نقر الظهر، أو زر التشغيل.</string>
+    <string name="settings_quick_launch_button">إعداد الفتح السريع</string>
+    <string name="settings_about">حول التطبيق</string>
+    <string name="settings_version">الإصدار %1$s (بناء %2$d)</string>
+    <string name="settings_check_updates">التحقق من التحديثات</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_language_system">لغة النظام</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ar">العربية</string>
+
+    <!-- Bubble appearance -->
+    <string name="appearance_size">الحجم — %1$d نقطة</string>
+    <string name="appearance_shape">الشكل</string>
+    <string name="appearance_shape_circle">دائرة</string>
+    <string name="appearance_shape_rounded">حواف دائرية</string>
+    <string name="appearance_shape_square">مربع</string>
+    <string name="appearance_colour">اللون</string>
+    <string name="appearance_theme_hint">حرف \"A\" يعني اتّباع ثيم التطبيق.</string>
+    <string name="appearance_opacity">الشفافية — %1$d%%</string>
+    <string name="appearance_show_amount">إظهار المبلغ داخل الفقاعة</string>
+    <string name="position_hint">اسحب النقطة إلى المكان الذي تريد أن تظهر فيه الفقاعة.</string>
+    <string name="position_reset">إعادة تعيين</string>
+    <string name="position_left">الحافة اليسرى</string>
+    <string name="position_right">الحافة اليمنى</string>
+    <string name="position_remember">تذكّر المكان الذي أسحبها إليه</string>
+    <string name="position_snap">الالتصاق بأقرب حافة</string>
+    <string name="position_snap_hint">يُبقي الفقاعة عند إحدى الحافتين بدل تعليقها وسط الشاشة.</string>
+
+    <!-- Sender picker -->
+    <string name="picker_title">اختيار من الرسائل</string>
+    <string name="picker_needs_access">مطلوب الوصول للرسائل</string>
+    <string name="picker_needs_access_body">لاختيار معرّف المرسل من رسائلك الحالية، يحتاج التطبيق صلاحية قراءة الرسائل. تُقرأ على جهازك فقط ولا يخرج منها شيء.</string>
+    <string name="picker_grant">منح صلاحية الرسائل</string>
+    <string name="picker_manual_instead">اكتب معرّف المرسل يدوياً بدلاً من ذلك</string>
+    <string name="picker_no_sms">لا توجد رسائل على هذا الجهاز</string>
+    <string name="picker_search">ابحث في المرسل أو النص</string>
+    <string name="picker_selected">%1$d محدد</string>
+    <string name="picker_add_selected">إضافة المحدد</string>
+    <string name="picker_added_one">تمت إضافة معرّف المرسل</string>
+    <string name="picker_added_many">تمت إضافة %1$d معرّفات</string>
+    <string name="picker_senders_found">المرسلون المكتشفون</string>
+    <string name="picker_senders_found_body">الرسائل المحددة من %1$d مرسلين مختلفين. اختر أيّهم تريد إضافته:</string>
+    <string name="picker_already_added">✓ مضاف</string>
+
+    <!-- Historical import -->
+    <string name="import_title">استيراد العمليات السابقة</string>
+    <string name="import_needs_sms">مطلوب الوصول للرسائل</string>
+    <string name="import_needs_sms_body">يتطلب استيراد العمليات السابقة صلاحية قراءة الرسائل المخزّنة على الجهاز. بدونها تبقى الفقاعة اليومية تعمل — الاستيراد وحده هو المتعطّل.</string>
+    <string name="import_bank">البنك</string>
+    <string name="import_no_senders">لا توجد معرّفات مرسلين — أضف واحداً من الإعدادات أولاً.</string>
+    <string name="import_period">الفترة</string>
+    <string name="import_last_month">آخر شهر</string>
+    <string name="import_3_months">٣ أشهر</string>
+    <string name="import_6_months">٦ أشهر</string>
+    <string name="import_1_year">سنة</string>
+    <string name="import_from">من</string>
+    <string name="import_to">إلى</string>
+    <string name="import_scan">فحص الرسائل</string>
+    <string name="import_scanning">جاري فحص الرسائل…</string>
+    <string name="import_scanned">تم فحص %1$d رسالة</string>
+    <string name="import_found">تم العثور على %1$d عملية</string>
+    <string name="import_history">سجل الاستيراد</string>
+    <string name="import_none_new">لا توجد عمليات جديدة</string>
+    <string name="import_select_all">تحديد الكل</string>
+    <string name="import_deselect_all">إلغاء تحديد الكل</string>
+    <string name="import_set_category">تعيين تصنيف</string>
+    <string name="import_selected_button">استيراد المحدد</string>
+    <string name="import_summary">%1$d محدد • الإجمالي %2$s</string>
+    <string name="import_confirm_title">استيراد العمليات؟</string>
+    <string name="import_importing">جاري الاستيراد…</string>
+    <string name="import_imported">تم استيراد %1$d عملية</string>
+    <string name="import_duplicates">تم تجاهل %1$d عملية مكررة</string>
+
+    <!-- Updates -->
+    <string name="updates">التحديثات</string>
+    <string name="update_installed_version">النسخة المثبّتة</string>
+    <string name="update_permission_title">مطلوب صلاحية</string>
+    <string name="update_permission_body">ليثبّت التطبيق تحديثاته بنفسه، يحتاج صلاحية \"تثبيت تطبيقات غير معروفة\". تمنحها مرة واحدة فقط.</string>
+    <string name="update_permission_button">فتح إعدادات الصلاحية</string>
+    <string name="update_checking">جاري التحقق…</string>
+    <string name="update_up_to_date">✅ أنت على أحدث نسخة</string>
+    <string name="update_latest">النسخة %1$s هي الأحدث.</string>
+    <string name="update_check_again">تحقق مجدداً</string>
+    <string name="update_available">تتوفر النسخة %1$s</string>
+    <string name="update_download">تنزيل التحديث</string>
+    <string name="update_downloading">جاري التنزيل… %1$d%%</string>
+    <string name="update_ready">جاهز لتثبيت %1$s</string>
+    <string name="update_ready_body">سيعرض أندرويد شاشة التأكيد الخاصة به. يُغلق التطبيق أثناء التثبيت ثم تفتحه من جديد — بياناتك محفوظة.</string>
+    <string name="update_install_now">تثبيت الآن</string>
+    <string name="update_installing">جاري تثبيت %1$s…</string>
+    <string name="update_installing_body">أكّد على شاشة التثبيت في أندرويد. سيُغلق التطبيق أثناء استبداله — افتحه بعدها وستؤكد لك هذه الشاشة النسخة الجديدة.</string>
+    <string name="update_nothing_appeared">لم يظهر شيء — حاول مجدداً</string>
+    <string name="update_success">✅ تم التحديث إلى %1$s</string>
+    <string name="update_success_body">تم تثبيت التحديث بنجاح.</string>
+    <string name="update_error">حدث خطأ ما</string>
+    <string name="update_system_installer">التثبيت عبر مثبّت النظام</string>
+
+    <!-- Quick launch -->
+    <string name="quick_launch_title">الفتح السريع</string>
+    <string name="quick_launch_intro">طرق فتح الإجراءات السريعة من أي مكان. لا يظهر إلا ما يدعمه جهازك فعلياً.</string>
+    <string name="quick_launch_on">● مفعّل</string>
+    <string name="quick_launch_unsupported">غير مدعوم على هذا الجهاز.</string>
+    <string name="quick_launch_sensitivity">الحساسية</string>
+
+    <!-- Notification source -->
+    <string name="notif_source_title">إشعارات الدفع</string>
+    <string name="notif_access_granted">✅ تم منح الوصول للإشعارات</string>
+    <string name="notif_access_needed">⚠️ مطلوب الوصول للإشعارات</string>
+    <string name="notif_access_body">لا يمكن قراءة الدفع التلامسي مباشرة — يعطي أندرويد العملية لتطبيق المحفظة وحده. وقراءة إشعار الدفع الذي تنشره محفظتك أو بنكك هي أقرب إشارة، وتصل غالباً قبل الرسالة.</string>
+    <string name="notif_grant">منح الوصول للإشعارات</string>
+    <string name="notif_search_apps">ابحث عن تطبيق</string>
+    <string name="notif_pick_apps">اختر تطبيقات محفظتك وبنكك (%1$d محدد)</string>
+</resources>

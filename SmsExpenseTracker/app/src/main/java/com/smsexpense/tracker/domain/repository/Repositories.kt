@@ -123,6 +123,8 @@ interface SettingsRepository {
     val confidenceThreshold: Flow<Float>
     val bubbleSettings: Flow<BubbleSettings>
     val apiSettings: Flow<ApiSettings>
+    /** "system", "en" or "ar". */
+    val language: Flow<String>
     /** First-run setup wizard finished (or skipped). */
     val setupCompleted: Flow<Boolean>
     /** Why the last detected payment did or did not raise a bubble (diagnostics). */
@@ -152,6 +154,7 @@ interface SettingsRepository {
     suspend fun setApiEnabled(enabled: Boolean)
     suspend fun setApiBaseUrl(url: String)
     suspend fun setApiAuthToken(token: String)
+    suspend fun setLanguage(language: String)
     suspend fun setSetupCompleted(completed: Boolean)
     suspend fun setLastBubbleStatus(status: String)
     suspend fun setBackTapEnabled(enabled: Boolean)

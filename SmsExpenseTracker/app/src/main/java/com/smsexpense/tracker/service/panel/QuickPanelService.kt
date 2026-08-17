@@ -122,7 +122,7 @@ class QuickPanelService : Service() {
         ).apply { gravity = Gravity.BOTTOM }
 
         val owner = OverlayViewOwner().also { it.create() }
-        val view = ComposeView(this).apply {
+        val view = ComposeView(com.smsexpense.tracker.util.AppLocale.wrap(this)).apply {
             setViewTreeLifecycleOwner(owner)
             setViewTreeViewModelStoreOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)

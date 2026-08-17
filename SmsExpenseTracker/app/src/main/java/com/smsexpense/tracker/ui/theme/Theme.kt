@@ -40,5 +40,16 @@ fun AppTheme(
         darkTheme -> DarkColors
         else -> LightColors
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    // Overlay windows are built from a service context, which does not inherit the
+    // activity's layout direction, so it is forced from the selected language.
+    val layoutDirection = if (com.smsexpense.tracker.util.AppLocale.isRtl()) {
+        androidx.compose.ui.unit.LayoutDirection.Rtl
+    } else {
+        androidx.compose.ui.unit.LayoutDirection.Ltr
+    }
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection,
+    ) {
+        MaterialTheme(colorScheme = colorScheme, content = content)
+    }
 }

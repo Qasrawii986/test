@@ -238,6 +238,10 @@ class FakeSettingsRepository(
     override suspend fun setApiAuthToken(token: String) { _api.value = _api.value.copy(authToken = token) }
     override suspend fun setSetupCompleted(completed: Boolean) { _setupCompleted.value = completed }
 
+    private val _language = MutableStateFlow("system")
+    override val language: Flow<String> = _language
+    override suspend fun setLanguage(language: String) { _language.value = language }
+
     private val _lastBubbleStatus = MutableStateFlow("")
     override val lastBubbleStatus: Flow<String> = _lastBubbleStatus
     override suspend fun setLastBubbleStatus(status: String) { _lastBubbleStatus.value = status }

@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.domain.model.Category
 import com.smsexpense.tracker.domain.model.Payment
 import java.time.YearMonth
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @Composable
 fun PaymentRow(
@@ -49,7 +51,7 @@ fun PaymentRow(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = payment.merchant ?: category?.name ?: "Uncategorized",
+                    text = payment.merchant ?: category?.name ?: stringResource(R.string.uncategorized),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                 )
@@ -112,7 +114,7 @@ fun MonthPicker(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrevious) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous month")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.dashboard_previous_month))
         }
         Text(
             text = monthTitle(selected.year, selected.monthValue),
@@ -120,7 +122,7 @@ fun MonthPicker(
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         IconButton(onClick = onNext, enabled = selected < YearMonth.now()) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next month")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.dashboard_next_month))
         }
     }
 }

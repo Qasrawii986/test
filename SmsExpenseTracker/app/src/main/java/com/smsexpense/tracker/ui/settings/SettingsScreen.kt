@@ -38,9 +38,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.smsexpense.tracker.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -58,10 +60,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -75,21 +77,46 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // --- Language ---
+            SectionCard(title = stringResource(R.string.settings_language)) {
+                val activity = LocalContext.current as? android.app.Activity
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val labels = mapOf(
+                        com.smsexpense.tracker.util.AppLocale.SYSTEM to R.string.settings_language_system,
+                        com.smsexpense.tracker.util.AppLocale.ENGLISH to R.string.settings_language_en,
+                        com.smsexpense.tracker.util.AppLocale.ARABIC to R.string.settings_language_ar,
+                    )
+                    com.smsexpense.tracker.util.AppLocale.SUPPORTED.forEach { code ->
+                        androidx.compose.material3.FilterChip(
+                            selected = state.language == code,
+                            onClick = {
+                                // Recreating rebuilds every screen against the new locale,
+                                // including the layout direction.
+                                viewModel.setLanguage(code) { activity?.recreate() }
+                            },
+                            label = { Text(stringResource(labels.getValue(code))) },
+                        )
+                    }
+                }
+            }
+
             // --- Live permission status: makes a missing permission obvious
             // instead of the bubble just never appearing. ---
             PermissionStatusCard(lastBubbleStatus = state.lastBubbleStatus)
 
             // --- Bank sender IDs ---
-            SectionCard(title = "Bank Sender IDs") {
+            SectionCard(title = stringResource(R.string.settings_sender_ids)) {
                 Text(
-                    "Only messages from these senders are parsed. Add your bank's SMS sender name, e.g. MYBANK.",
+                    stringResource(R.string.settings_sender_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 state.senderIds.forEach { sender ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(sender, modifier = Modifier.weight(1f))
                         IconButton(onClick = { viewModel.removeSenderId(sender) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Remove $sender")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.settings_remove_sender, sender))
                         }
                     }
                 }
@@ -98,7 +125,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = newSender,
                         onValueChange = { newSender = it },
-                        label = { Text("Sender ID") },
+                        label = { Text(stringResource(R.string.settings_sender_id)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                     )
@@ -110,65 +137,63 @@ fun SettingsScreen(
                         },
                         enabled = newSender.isNotBlank(),
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add sender")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.settings_add_sender))
                     }
                 }
                 androidx.compose.material3.OutlinedButton(
                     onClick = onChooseFromSms,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Choose from SMS") }
+                ) { Text(stringResource(R.string.setup_choose_from_sms)) }
             }
 
             // --- Notification source ---
-            SectionCard(title = "Payment notifications") {
+            SectionCard(title = stringResource(R.string.settings_notifications_source)) {
                 Text(
-                    "Also capture payments from wallet and bank app notifications — useful " +
-                        "for contactless taps, which often notify before the bank texts.",
+                    stringResource(R.string.settings_notifications_source_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 androidx.compose.material3.OutlinedButton(
                     onClick = onOpenNotificationSource,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Choose apps to watch") }
+                ) { Text(stringResource(R.string.settings_choose_apps)) }
             }
 
             // --- Historical import ---
-            SectionCard(title = "Import") {
+            SectionCard(title = stringResource(R.string.settings_import)) {
                 Text(
-                    "Scan bank SMS already on this device and import old payments. " +
-                        "Already-imported messages are skipped automatically.",
+                    stringResource(R.string.settings_import_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 androidx.compose.material3.OutlinedButton(
                     onClick = onImportHistorical,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Import Historical Transactions") }
+                ) { Text(stringResource(R.string.settings_import_button)) }
             }
 
             // --- Currency ---
-            SectionCard(title = "Currency") {
+            SectionCard(title = stringResource(R.string.settings_currency)) {
                 var currency by remember(state.defaultCurrency) { mutableStateOf(state.defaultCurrency) }
                 OutlinedTextField(
                     value = currency,
                     onValueChange = { currency = it.uppercase().take(4) },
-                    label = { Text("Default currency (used when SMS has none)") },
+                    label = { Text(stringResource(R.string.settings_currency_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (currency != state.defaultCurrency && currency.isNotBlank()) {
                     androidx.compose.material3.TextButton(onClick = { viewModel.setDefaultCurrency(currency) }) {
-                        Text("Save currency")
+                        Text(stringResource(R.string.settings_save_currency))
                     }
                 }
             }
 
             // --- Bubble ---
-            SectionCard(title = "Bubble") {
-                ToggleRow("Show floating bubble", state.bubble.enabled) {
+            SectionCard(title = stringResource(R.string.settings_bubble)) {
+                ToggleRow(stringResource(R.string.settings_bubble_show), state.bubble.enabled) {
                     viewModel.setBubbleEnabled(it)
                 }
                 Text(
-                    "Auto-hide after ${state.bubble.autoHideSeconds}s (payment stays uncategorized)",
+                    stringResource(R.string.settings_autohide, state.bubble.autoHideSeconds),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 var autoHide by remember(state.bubble.autoHideSeconds) {
@@ -183,7 +208,7 @@ fun SettingsScreen(
             }
 
             // --- Bubble position ---
-            SectionCard(title = "Bubble position") {
+            SectionCard(title = stringResource(R.string.settings_bubble_position)) {
                 BubblePositionPicker(
                     settings = state.bubble,
                     onPositionChange = viewModel::setBubblePosition,
@@ -193,7 +218,7 @@ fun SettingsScreen(
             }
 
             // --- Bubble appearance ---
-            SectionCard(title = "Bubble appearance") {
+            SectionCard(title = stringResource(R.string.settings_bubble_appearance)) {
                 BubbleAppearanceControls(
                     settings = state.bubble,
                     onSizeChange = viewModel::setBubbleSize,
@@ -205,13 +230,13 @@ fun SettingsScreen(
             }
 
             // --- Parsing ---
-            SectionCard(title = "Parsing") {
+            SectionCard(title = stringResource(R.string.settings_parsing)) {
                 Text(
-                    "Confidence threshold: %.0f%%".format(state.confidenceThreshold * 100),
+                    stringResource(R.string.settings_threshold, (state.confidenceThreshold * 100).toInt()),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    "Messages scoring below this are ignored.",
+                    stringResource(R.string.settings_threshold_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 var threshold by remember(state.confidenceThreshold) {
@@ -226,15 +251,15 @@ fun SettingsScreen(
             }
 
             // --- Server ---
-            SectionCard(title = "Server") {
-                ToggleRow("Sync payments to server", state.api.enabled) {
+            SectionCard(title = stringResource(R.string.settings_server)) {
+                ToggleRow(stringResource(R.string.settings_sync_toggle), state.api.enabled) {
                     viewModel.setApiEnabled(it)
                 }
                 var baseUrl by remember(state.api.baseUrl) { mutableStateOf(state.api.baseUrl) }
                 OutlinedTextField(
                     value = baseUrl,
                     onValueChange = { baseUrl = it },
-                    label = { Text("Base URL (e.g. https://myserver.com/api)") },
+                    label = { Text(stringResource(R.string.settings_base_url)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -242,7 +267,7 @@ fun SettingsScreen(
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
-                    label = { Text("Auth token (optional, sent as Bearer)") },
+                    label = { Text(stringResource(R.string.settings_auth_token)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -250,25 +275,24 @@ fun SettingsScreen(
                     androidx.compose.material3.TextButton(onClick = {
                         viewModel.setApiBaseUrl(baseUrl)
                         viewModel.setApiAuthToken(token)
-                    }) { Text("Save server settings") }
+                    }) { Text(stringResource(R.string.settings_save_server)) }
                 }
             }
 
             // --- Quick launch ---
-            SectionCard(title = "Quick launch") {
+            SectionCard(title = stringResource(R.string.settings_quick_launch)) {
                 Text(
-                    "Open quick actions from anywhere: a Quick Settings tile, a home screen " +
-                        "shortcut, a back tap, or the power button.",
+                    stringResource(R.string.settings_quick_launch_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 androidx.compose.material3.OutlinedButton(
                     onClick = onOpenQuickLaunch,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Set up quick launch") }
+                ) { Text(stringResource(R.string.settings_quick_launch_button)) }
             }
 
             // --- Updates + about ---
-            SectionCard(title = "About") {
+            SectionCard(title = stringResource(R.string.settings_about)) {
                 var taps by remember { mutableStateOf(0) }
                 Text(
                     text = versionLabel,
@@ -284,7 +308,7 @@ fun SettingsScreen(
                 androidx.compose.material3.OutlinedButton(
                     onClick = onOpenUpdates,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Check for updates") }
+                ) { Text(stringResource(R.string.settings_check_updates)) }
             }
             Spacer(Modifier)
         }
@@ -323,14 +347,14 @@ private fun PermissionStatusCard(lastBubbleStatus: String) {
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
     ) { permissions = com.smsexpense.tracker.service.bubble.AppPermissions.read(context) }
 
-    SectionCard(title = "Permissions") {
+    SectionCard(title = stringResource(R.string.settings_permissions)) {
         PermissionRow(
-            label = "Read incoming SMS",
+            label = stringResource(R.string.settings_perm_sms),
             granted = permissions.sms,
             onFix = { smsLauncher.launch(android.Manifest.permission.RECEIVE_SMS) },
         )
         PermissionRow(
-            label = "Display over other apps (bubble)",
+            label = stringResource(R.string.settings_perm_overlay),
             granted = permissions.overlay,
             onFix = {
                 context.startActivity(
@@ -342,7 +366,7 @@ private fun PermissionStatusCard(lastBubbleStatus: String) {
             },
         )
         PermissionRow(
-            label = "Notifications",
+            label = stringResource(R.string.settings_perm_notifications),
             granted = permissions.notifications,
             onFix = {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -352,15 +376,14 @@ private fun PermissionStatusCard(lastBubbleStatus: String) {
         )
         if (!permissions.overlay) {
             Text(
-                "Without this the bubble cannot appear — payments are still saved and " +
-                    "shown as a notification you can categorize.",
+                stringResource(R.string.settings_overlay_missing),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
         }
         if (lastBubbleStatus.isNotBlank()) {
             Text(
-                "Last payment: $lastBubbleStatus",
+                stringResource(R.string.settings_last_payment, lastBubbleStatus),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -375,7 +398,7 @@ private fun PermissionRow(label: String, granted: Boolean, onFix: () -> Unit) {
         Spacer(Modifier.width(8.dp))
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
         if (!granted) {
-            androidx.compose.material3.TextButton(onClick = onFix) { Text("Fix") }
+            androidx.compose.material3.TextButton(onClick = onFix) { Text(stringResource(R.string.fix)) }
         }
     }
 }

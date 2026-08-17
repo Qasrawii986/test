@@ -48,6 +48,19 @@ class MainActivity : ComponentActivity() {
     /** Set when launched from a payment notification, consumed once by AppRoot. */
     private var pendingPaymentId by mutableStateOf(0L)
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        // The chosen language has to be applied before any resource is resolved.
+        // AppLocale reads a cached value, primed by the Application on startup.
+        val language = runCatching {
+            kotlinx.coroutines.runBlocking {
+                (newBase.applicationContext as SmsExpenseApp)
+                    .container.settingsRepository.language.first()
+            }
+        }.getOrDefault(com.smsexpense.tracker.util.AppLocale.SYSTEM)
+        com.smsexpense.tracker.util.AppLocale.prime(language)
+        super.attachBaseContext(com.smsexpense.tracker.util.AppLocale.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val container = appContainer()

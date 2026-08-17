@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.domain.model.Category
 import com.smsexpense.tracker.domain.model.toTree
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 /**
  * Two-level category chooser used by the bubble, payment details and the
@@ -58,7 +60,7 @@ fun CategoryChips(
         } else {
             AssistChip(
                 onClick = { drilledInto = null },
-                label = { Text("‹ Back") },
+                label = { Text(stringResource(R.string.chips_back)) },
             )
             // Allow assigning the parent itself, not only a leaf.
             AssistChip(

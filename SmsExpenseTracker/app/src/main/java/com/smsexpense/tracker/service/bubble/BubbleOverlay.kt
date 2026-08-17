@@ -40,6 +40,8 @@ import com.smsexpense.tracker.domain.model.Payment
 import com.smsexpense.tracker.ui.components.formatAmount
 import com.smsexpense.tracker.ui.theme.AppTheme
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @Composable
 fun BubbleOverlay(
@@ -174,7 +176,7 @@ private fun ExpandedPanel(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (queued > 0) "Purchase (+$queued more)" else "Purchase",
+                        text = if (queued > 0) stringResource(R.string.bubble_purchase_more, queued) else stringResource(R.string.bubble_purchase),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.secondary,
                     )
@@ -188,7 +190,7 @@ private fun ExpandedPanel(
                     }
                 }
                 IconButton(onClick = onCollapse) {
-                    Icon(Icons.Default.Close, contentDescription = "Collapse")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.bubble_collapse))
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -198,7 +200,7 @@ private fun ExpandedPanel(
             )
             Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text("Later") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.bubble_later)) }
             }
         }
     }

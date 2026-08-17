@@ -40,6 +40,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val API_BASE_URL = stringPreferencesKey("api_base_url")
         val API_AUTH_TOKEN = stringPreferencesKey("api_auth_token")
         val SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
+        val LANGUAGE = stringPreferencesKey("language")
         val LAST_BUBBLE_STATUS = stringPreferencesKey("last_bubble_status")
         val BACK_TAP_ENABLED = booleanPreferencesKey("back_tap_enabled")
         val BACK_TAP_SENSITIVITY = stringPreferencesKey("back_tap_sensitivity")
@@ -83,6 +84,14 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
 
     override val setupCompleted: Flow<Boolean> =
         context.dataStore.data.map { it[Keys.SETUP_COMPLETED] ?: false }
+
+    override val language: Flow<String> = context.dataStore.data.map {
+        it[Keys.LANGUAGE] ?: com.smsexpense.tracker.util.AppLocale.SYSTEM
+    }
+
+    override suspend fun setLanguage(language: String) {
+        context.dataStore.edit { it[Keys.LANGUAGE] = language }
+    }
 
     override suspend fun setSetupCompleted(completed: Boolean) {
         context.dataStore.edit { it[Keys.SETUP_COMPLETED] = completed }

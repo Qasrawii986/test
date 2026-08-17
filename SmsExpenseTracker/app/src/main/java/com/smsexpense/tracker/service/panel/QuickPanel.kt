@@ -32,6 +32,8 @@ import com.smsexpense.tracker.ui.components.CategoryChips
 import com.smsexpense.tracker.ui.components.formatAmount
 import com.smsexpense.tracker.ui.theme.AppTheme
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 /**
  * The quick-actions sheet raised by any quick-launch method: this month at a
@@ -68,7 +70,7 @@ fun QuickPanel(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("This month", style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.panel_this_month), style = MaterialTheme.typography.labelMedium)
                         Text(
                             formatAmount(total, currency),
                             style = MaterialTheme.typography.headlineSmall,
@@ -76,19 +78,19 @@ fun QuickPanel(
                         )
                     }
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                     }
                 }
 
                 if (pending.isEmpty()) {
                     Text(
-                        "Nothing waiting to be categorized ✅",
+                        stringResource(R.string.panel_all_clear),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 } else {
                     HorizontalDivider()
                     Text(
-                        "Needs categorizing (${pending.size})",
+                        stringResource(R.string.dashboard_needs_categorizing, pending.size),
                         style = MaterialTheme.typography.titleSmall,
                     )
                     pending.take(MAX_PENDING_SHOWN).forEach { payment ->
@@ -108,14 +110,14 @@ fun QuickPanel(
                     }
                     if (pending.size > MAX_PENDING_SHOWN) {
                         Text(
-                            "+${pending.size - MAX_PENDING_SHOWN} more in the app",
+                            stringResource(R.string.panel_more_in_app, pending.size - MAX_PENDING_SHOWN),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
                 }
 
                 Button(onClick = onOpenApp, modifier = Modifier.fillMaxWidth()) {
-                    Text("Open full app")
+                    Text(stringResource(R.string.panel_open_app))
                 }
             }
         }

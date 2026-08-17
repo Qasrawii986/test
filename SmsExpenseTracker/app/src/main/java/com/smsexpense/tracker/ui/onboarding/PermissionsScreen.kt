@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 data class PermissionsState(
     val smsGranted: Boolean,
@@ -64,27 +66,27 @@ fun PermissionsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Spacer(Modifier.height(24.dp))
-        Text("Welcome 👋", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.welcome), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(
-            "SMS Expense reads your bank's payment SMS and lets you categorize each expense with one tap. It needs three permissions to work:",
+            stringResource(R.string.permissions_intro),
             style = MaterialTheme.typography.bodyLarge,
         )
 
         PermissionCard(
             step = "1",
-            title = "SMS access",
-            explanation = "Required to detect payment messages the moment your bank sends them. Messages are processed on-device only.",
+            title = stringResource(R.string.perm_sms_title),
+            explanation = stringResource(R.string.perm_sms_body),
             granted = state.smsGranted,
-            buttonText = "Grant SMS permission",
+            buttonText = stringResource(R.string.perm_sms_button),
             onClick = { smsLauncher.launch(Manifest.permission.RECEIVE_SMS) },
         )
 
         PermissionCard(
             step = "2",
-            title = "Display over other apps",
-            explanation = "Required to show the small floating bubble on top of whatever app is open, so you can categorize a payment without switching apps.",
+            title = stringResource(R.string.perm_overlay_title),
+            explanation = stringResource(R.string.perm_overlay_body),
             granted = state.overlayGranted,
-            buttonText = "Open overlay settings",
+            buttonText = stringResource(R.string.perm_overlay_button),
             onClick = {
                 context.startActivity(
                     Intent(
@@ -97,10 +99,10 @@ fun PermissionsScreen(
 
         PermissionCard(
             step = "3",
-            title = "Notifications",
-            explanation = "Required on Android 13+ so the short-lived service behind the bubble can show its status notification.",
+            title = stringResource(R.string.perm_notifications_title),
+            explanation = stringResource(R.string.perm_notifications_body),
             granted = state.notificationsGranted,
-            buttonText = "Grant notifications",
+            buttonText = stringResource(R.string.perm_notifications_button),
             onClick = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -111,7 +113,7 @@ fun PermissionsScreen(
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = onSkip) { Text(if (state.allGranted) "Continue" else "Skip for now") }
+            TextButton(onClick = onSkip) { Text(if (state.allGranted) stringResource(R.string.continue_label) else stringResource(R.string.skip_for_now)) }
         }
     }
 }

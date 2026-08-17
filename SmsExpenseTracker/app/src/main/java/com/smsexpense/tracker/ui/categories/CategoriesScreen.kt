@@ -40,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.domain.model.Category
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,17 +58,17 @@ fun CategoriesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Categories") },
+                title = { Text(stringResource(R.string.categories)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAdd = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add category")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.category_add_button))
             }
         },
     ) { padding ->
@@ -99,7 +101,7 @@ fun CategoriesScreen(
                         androidx.compose.material3.TextButton(
                             onClick = { addingSubcategoryOf = node.category },
                             modifier = Modifier.padding(start = 24.dp, bottom = 4.dp),
-                        ) { Text("+ Add subcategory") }
+                        ) { Text(stringResource(R.string.category_add_sub_button)) }
                     }
                 }
             }
@@ -108,7 +110,7 @@ fun CategoriesScreen(
 
     if (showAdd) {
         CategoryDialog(
-            title = "Add main category",
+            title = stringResource(R.string.category_add_main),
             initialName = "",
             initialIcon = "",
             onConfirm = { name, icon ->
@@ -120,7 +122,7 @@ fun CategoriesScreen(
     }
     addingSubcategoryOf?.let { parent ->
         CategoryDialog(
-            title = "Add subcategory to ${parent.name}",
+            title = stringResource(R.string.category_add_sub, parent.name),
             initialName = "",
             initialIcon = "",
             onConfirm = { name, icon ->
@@ -133,14 +135,13 @@ fun CategoriesScreen(
     deleting?.let { (category, childCount) ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text("Delete ${category.name}?") },
+            title = { Text(stringResource(R.string.category_delete_title, category.name)) },
             text = {
                 Text(
                     if (childCount > 0) {
-                        "This also deletes its $childCount subcategories. Payments in them " +
-                            "stay, but lose their category."
+                        stringResource(R.string.category_delete_with_children, childCount)
                     } else {
-                        "Payments in this category stay, but lose their category."
+                        stringResource(R.string.category_delete_simple)
                     }
                 )
             },
@@ -148,14 +149,14 @@ fun CategoriesScreen(
                 TextButton(onClick = {
                     viewModel.delete(category.id)
                     deleting = null
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
     editing?.let { category ->
         CategoryDialog(
-            title = "Edit category",
+            title = stringResource(R.string.edit),
             initialName = category.name,
             initialIcon = category.icon,
             onConfirm = { name, icon ->
@@ -199,16 +200,16 @@ private fun CategoryRow(
             modifier = Modifier.weight(1f),
         )
         IconButton(onClick = onMoveUp) {
-            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
+            Icon(Icons.Default.KeyboardArrowUp, contentDescription = stringResource(R.string.move_up))
         }
         IconButton(onClick = onMoveDown) {
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.move_down))
         }
         IconButton(onClick = onEdit) {
-            Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
         }
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete")
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
         }
     }
 }
@@ -231,22 +232,22 @@ private fun CategoryDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.category_name)) },
                     singleLine = true,
                 )
                 OutlinedTextField(
                     value = icon,
                     onValueChange = { icon = it.take(4) },
-                    label = { Text("Icon (emoji)") },
+                    label = { Text(stringResource(R.string.category_icon)) },
                     singleLine = true,
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name, icon) }, enabled = name.isNotBlank()) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

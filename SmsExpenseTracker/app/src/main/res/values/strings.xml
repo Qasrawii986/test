@@ -4,4 +4,247 @@
     <string name="bubble_channel_desc">Shown while a detected payment is waiting to be categorized</string>
     <string name="bubble_notification_title">New payment detected</string>
     <string name="bubble_notification_text">Tap the floating bubble to categorize it</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="add">Add</string>
+    <string name="done">Done</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="try_again">Try again</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="fix">Fix</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_total_spending">Total Spending</string>
+    <string name="dashboard_transactions">%1$d transactions</string>
+    <string name="dashboard_needs_categorizing">Needs categorizing (%1$d)</string>
+    <string name="dashboard_by_category">By category</string>
+    <string name="dashboard_latest">Latest transactions</string>
+    <string name="dashboard_empty">No payments this month</string>
+    <string name="dashboard_empty_hint">Payments appear automatically when a bank SMS arrives</string>
+    <string name="dashboard_previous_month">Previous month</string>
+    <string name="dashboard_next_month">Next month</string>
+    <string name="categories">Categories</string>
+    <string name="settings">Settings</string>
+    <string name="debug">Debug</string>
+
+    <!-- Payment detail -->
+    <string name="payment">Payment</string>
+    <string name="payment_not_found">Payment not found</string>
+    <string name="payment_date">Date</string>
+    <string name="payment_time">Time</string>
+    <string name="payment_sender">Sender</string>
+    <string name="payment_status">Status</string>
+    <string name="payment_sync">Sync</string>
+    <string name="payment_confidence">Confidence</string>
+    <string name="payment_category">Category</string>
+    <string name="payment_current_category">Current: %1$s</string>
+    <string name="payment_original_sms">Original message</string>
+
+    <!-- Categories -->
+    <string name="category_add_main">Add main category</string>
+    <string name="category_add_sub">Add subcategory to %1$s</string>
+    <string name="category_add_sub_button">+ Add subcategory</string>
+    <string name="category_add_button">Add category</string>
+    <string name="category_name">Name</string>
+    <string name="category_icon">Icon (emoji)</string>
+    <string name="category_delete_title">Delete %1$s?</string>
+    <string name="category_delete_with_children">This also deletes its %1$d subcategories. Payments in them stay, but lose their category.</string>
+    <string name="category_delete_simple">Payments in this category stay, but lose their category.</string>
+
+    <!-- Bubble -->
+    <string name="bubble_purchase">Purchase</string>
+    <string name="bubble_purchase_more">Purchase (+%1$d more)</string>
+    <string name="bubble_later">Later</string>
+    <string name="bubble_collapse">Collapse</string>
+    <string name="bubble_dismiss">Dismiss bubble</string>
+    <string name="bubble_drag_here">Drag here to dismiss</string>
+    <string name="bubble_release">Release to dismiss</string>
+    <string name="chips_back">‹ Back</string>
+
+    <!-- Quick panel -->
+    <string name="panel_this_month">This month</string>
+    <string name="panel_all_clear">Nothing waiting to be categorized ✅</string>
+    <string name="panel_more_in_app">+%1$d more in the app</string>
+    <string name="panel_open_app">Open full app</string>
+    <string name="close">Close</string>
+
+    <!-- Permissions / onboarding -->
+    <string name="welcome">Welcome</string>
+    <string name="permissions_intro">SMS Expense reads your bank\'s payment SMS and lets you categorize each expense with one tap. It needs three permissions to work:</string>
+    <string name="perm_sms_title">SMS access</string>
+    <string name="perm_sms_body">Required to detect payment messages the moment your bank sends them. Messages are processed on-device only.</string>
+    <string name="perm_sms_button">Grant SMS permission</string>
+    <string name="perm_overlay_title">Display over other apps</string>
+    <string name="perm_overlay_body">Required to show the small floating bubble on top of whatever app is open, so you can categorize a payment without switching apps.</string>
+    <string name="perm_overlay_button">Open overlay settings</string>
+    <string name="perm_notifications_title">Notifications</string>
+    <string name="perm_notifications_body">Required on Android 13+ so the short-lived service behind the bubble can show its status notification.</string>
+    <string name="perm_notifications_button">Grant notifications</string>
+    <string name="skip_for_now">Skip for now</string>
+    <string name="continue_label">Continue</string>
+
+    <!-- Setup wizard -->
+    <string name="setup_lets_configure">Let\'s configure your bank.</string>
+    <string name="setup_step1">Step 1 — Bank SMS Sender ID</string>
+    <string name="setup_step1_hint">The app only reads messages from the senders you choose here.</string>
+    <string name="setup_choose_from_sms">Choose from SMS</string>
+    <string name="setup_manual_hint">Or enter manually (e.g. MYBANK)</string>
+    <string name="setup_step2">Step 2 — Import previous transactions?</string>
+    <string name="setup_step2_hint">Optionally scan your existing bank SMS and import old payments. You can also do this later from Settings.</string>
+    <string name="setup_import_button">Import Previous Transactions</string>
+    <string name="setup_need_sender">Add a Sender ID first to enable the import.</string>
+
+    <!-- Settings -->
+    <string name="settings_permissions">Permissions</string>
+    <string name="settings_perm_sms">Read incoming SMS</string>
+    <string name="settings_perm_overlay">Display over other apps (bubble)</string>
+    <string name="settings_perm_notifications">Notifications</string>
+    <string name="settings_overlay_missing">Without this the bubble cannot appear — payments are still saved and shown as a notification you can categorize.</string>
+    <string name="settings_last_payment">Last payment: %1$s</string>
+    <string name="settings_sender_ids">Bank Sender IDs</string>
+    <string name="settings_sender_hint">Only messages from these senders are parsed. Add your bank\'s SMS sender name, e.g. MYBANK.</string>
+    <string name="settings_sender_id">Sender ID</string>
+    <string name="settings_add_sender">Add sender</string>
+    <string name="settings_remove_sender">Remove %1$s</string>
+    <string name="settings_notifications_source">Payment notifications</string>
+    <string name="settings_notifications_source_hint">Also capture payments from wallet and bank app notifications — useful for contactless taps, which often notify before the bank texts.</string>
+    <string name="settings_choose_apps">Choose apps to watch</string>
+    <string name="settings_import">Import</string>
+    <string name="settings_import_hint">Scan bank SMS already on this device and import old payments. Already-imported messages are skipped automatically.</string>
+    <string name="settings_import_button">Import Historical Transactions</string>
+    <string name="settings_currency">Currency</string>
+    <string name="settings_currency_hint">Default currency (used when SMS has none)</string>
+    <string name="settings_save_currency">Save currency</string>
+    <string name="settings_bubble">Bubble</string>
+    <string name="settings_bubble_show">Show floating bubble</string>
+    <string name="settings_autohide">Auto-hide after %1$ds (payment stays uncategorized)</string>
+    <string name="settings_bubble_position">Bubble position</string>
+    <string name="settings_bubble_appearance">Bubble appearance</string>
+    <string name="settings_parsing">Parsing</string>
+    <string name="settings_threshold">Confidence threshold: %1$d%%</string>
+    <string name="settings_threshold_hint">Messages scoring below this are ignored.</string>
+    <string name="settings_server">Server</string>
+    <string name="settings_sync_toggle">Sync payments to server</string>
+    <string name="settings_base_url">Base URL (e.g. https://myserver.com/api)</string>
+    <string name="settings_auth_token">Auth token (optional, sent as Bearer)</string>
+    <string name="settings_save_server">Save server settings</string>
+    <string name="settings_quick_launch">Quick launch</string>
+    <string name="settings_quick_launch_hint">Open quick actions from anywhere: a Quick Settings tile, a home screen shortcut, a back tap, or the power button.</string>
+    <string name="settings_quick_launch_button">Set up quick launch</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s (build %2$d)</string>
+    <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ar">العربية</string>
+
+    <!-- Bubble appearance -->
+    <string name="appearance_size">Size — %1$ddp</string>
+    <string name="appearance_shape">Shape</string>
+    <string name="appearance_shape_circle">Circle</string>
+    <string name="appearance_shape_rounded">Rounded</string>
+    <string name="appearance_shape_square">Square</string>
+    <string name="appearance_colour">Colour</string>
+    <string name="appearance_theme_hint">\"A\" follows the app theme.</string>
+    <string name="appearance_opacity">Opacity — %1$d%%</string>
+    <string name="appearance_show_amount">Show the amount inside the bubble</string>
+    <string name="position_hint">Drag the dot to where the bubble should appear.</string>
+    <string name="position_reset">Reset</string>
+    <string name="position_left">Left edge</string>
+    <string name="position_right">Right edge</string>
+    <string name="position_remember">Remember where I drag it</string>
+    <string name="position_snap">Snap to the nearest edge</string>
+    <string name="position_snap_hint">Keeps the bubble parked at a side instead of floating mid-screen.</string>
+
+    <!-- Sender picker -->
+    <string name="picker_title">Choose from SMS</string>
+    <string name="picker_needs_access">SMS access needed</string>
+    <string name="picker_needs_access_body">To pick a Sender ID from your existing messages, the app needs permission to read SMS. Messages are read on-device only and nothing leaves your phone.</string>
+    <string name="picker_grant">Grant SMS access</string>
+    <string name="picker_manual_instead">Enter Sender ID manually instead</string>
+    <string name="picker_no_sms">No SMS found on this device</string>
+    <string name="picker_search">Search sender or text</string>
+    <string name="picker_selected">%1$d selected</string>
+    <string name="picker_add_selected">Add Selected</string>
+    <string name="picker_added_one">Sender ID added</string>
+    <string name="picker_added_many">%1$d Sender IDs added</string>
+    <string name="picker_senders_found">Senders found</string>
+    <string name="picker_senders_found_body">The selected messages come from %1$d different senders. Choose which ones to add:</string>
+    <string name="picker_already_added">✓ added</string>
+
+    <!-- Historical import -->
+    <string name="import_title">Import Previous Transactions</string>
+    <string name="import_needs_sms">SMS access needed</string>
+    <string name="import_needs_sms_body">Importing previous transactions requires permission to read the SMS already stored on this device. Without it the daily bubble still works — only this import feature is unavailable.</string>
+    <string name="import_bank">Bank</string>
+    <string name="import_no_senders">No Sender IDs configured yet — add one in Settings first.</string>
+    <string name="import_period">Period</string>
+    <string name="import_last_month">Last month</string>
+    <string name="import_3_months">3 months</string>
+    <string name="import_6_months">6 months</string>
+    <string name="import_1_year">1 year</string>
+    <string name="import_from">From</string>
+    <string name="import_to">To</string>
+    <string name="import_scan">Scan SMS</string>
+    <string name="import_scanning">Scanning SMS…</string>
+    <string name="import_scanned">%1$d messages scanned</string>
+    <string name="import_found">%1$d transactions found</string>
+    <string name="import_history">Import History</string>
+    <string name="import_none_new">No new transactions found</string>
+    <string name="import_select_all">Select All</string>
+    <string name="import_deselect_all">Deselect All</string>
+    <string name="import_set_category">Set Category</string>
+    <string name="import_selected_button">Import Selected</string>
+    <string name="import_summary">%1$d selected • Total %2$s</string>
+    <string name="import_confirm_title">Import Transactions?</string>
+    <string name="import_importing">Importing…</string>
+    <string name="import_imported">%1$d transactions imported</string>
+    <string name="import_duplicates">%1$d duplicates skipped</string>
+
+    <!-- Updates -->
+    <string name="updates">Updates</string>
+    <string name="update_installed_version">Installed version</string>
+    <string name="update_permission_title">Permission needed</string>
+    <string name="update_permission_body">To install updates itself, this app needs the \"install unknown apps\" permission. You only grant it once.</string>
+    <string name="update_permission_button">Open permission settings</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">✅ You\'re up to date</string>
+    <string name="update_latest">Version %1$s is the latest release.</string>
+    <string name="update_check_again">Check again</string>
+    <string name="update_available">Version %1$s available</string>
+    <string name="update_download">Download update</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_ready">Ready to install %1$s</string>
+    <string name="update_ready_body">Android will show its own confirmation screen. The app closes while it installs, then you reopen it — your data is kept.</string>
+    <string name="update_install_now">Install now</string>
+    <string name="update_installing">Installing %1$s…</string>
+    <string name="update_installing_body">Confirm on Android\'s install screen. This app will close while it is replaced — reopen it afterwards and this screen will confirm the new version.</string>
+    <string name="update_nothing_appeared">Nothing appeared — try again</string>
+    <string name="update_success">✅ Updated to %1$s</string>
+    <string name="update_success_body">The update installed successfully.</string>
+    <string name="update_error">Something went wrong</string>
+    <string name="update_system_installer">Install with system installer</string>
+
+    <!-- Quick launch -->
+    <string name="quick_launch_title">Quick launch</string>
+    <string name="quick_launch_intro">Ways to open quick actions from anywhere. Only what your device actually supports is listed.</string>
+    <string name="quick_launch_on">● On</string>
+    <string name="quick_launch_unsupported">Not supported on this device.</string>
+    <string name="quick_launch_sensitivity">Sensitivity</string>
+
+    <!-- Notification source -->
+    <string name="notif_source_title">Payment notifications</string>
+    <string name="notif_access_granted">✅ Notification access granted</string>
+    <string name="notif_access_needed">⚠️ Notification access needed</string>
+    <string name="notif_access_body">Contactless taps cannot be read directly — Android gives the transaction only to the wallet app. Reading the payment notification your wallet or bank posts is the closest signal, and it usually arrives before the SMS.</string>
+    <string name="notif_grant">Grant notification access</string>
+    <string name="notif_search_apps">Search apps</string>
+    <string name="notif_pick_apps">Pick your wallet and bank apps (%1$d selected)</string>
 </resources>

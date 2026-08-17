@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.smsexpense.tracker.ui.components.formatAmount
 import com.smsexpense.tracker.ui.components.formatDate
 import com.smsexpense.tracker.ui.components.formatTime
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -45,15 +47,15 @@ fun PaymentDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Payment") },
+                title = { Text(stringResource(R.string.payment)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.delete(onDone = onBack) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
                 },
             )
@@ -62,7 +64,7 @@ fun PaymentDetailScreen(
         val payment = state.payment
         if (payment == null) {
             if (!state.loading) {
-                Column(Modifier.padding(padding).padding(16.dp)) { Text("Payment not found") }
+                Column(Modifier.padding(padding).padding(16.dp)) { Text(stringResource(R.string.payment_not_found)) }
             }
             return@Scaffold
         }
@@ -83,18 +85,18 @@ fun PaymentDetailScreen(
                 Text(it, style = MaterialTheme.typography.titleMedium)
             }
 
-            DetailRow("Date", formatDate(payment.timestamp))
-            DetailRow("Time", formatTime(payment.timestamp))
-            DetailRow("Sender", payment.sender)
-            DetailRow("Status", payment.status.name)
-            DetailRow("Sync", payment.syncStatus.name)
-            DetailRow("Confidence", "%.0f%%".format(payment.confidence * 100))
+            DetailRow(stringResource(R.string.payment_date), formatDate(payment.timestamp))
+            DetailRow(stringResource(R.string.payment_time), formatTime(payment.timestamp))
+            DetailRow(stringResource(R.string.payment_sender), payment.sender)
+            DetailRow(stringResource(R.string.payment_status), payment.status.name)
+            DetailRow(stringResource(R.string.payment_sync), payment.syncStatus.name)
+            DetailRow(stringResource(R.string.payment_confidence), "%.0f%%".format(payment.confidence * 100))
 
-            Text("Category", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.payment_category), style = MaterialTheme.typography.titleMedium)
             com.smsexpense.tracker.ui.components.categoryPath(state.categories, payment.categoryId)
                 ?.let { path ->
                     Text(
-                        "Current: $path",
+                        stringResource(R.string.payment_current_category, path),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -105,7 +107,7 @@ fun PaymentDetailScreen(
                 selectedId = payment.categoryId,
             )
 
-            Text("Original SMS", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.payment_original_sms), style = MaterialTheme.typography.titleMedium)
             Card(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = payment.originalMessage,

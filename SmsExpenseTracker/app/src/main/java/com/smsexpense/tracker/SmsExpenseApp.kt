@@ -96,6 +96,12 @@ class SmsExpenseApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        // Seed the cached locale before any UI or overlay is built.
+        container.applicationScope.launch {
+            container.settingsRepository.language.collect {
+                com.smsexpense.tracker.util.AppLocale.prime(it)
+            }
+        }
         container.applicationScope.launch {
             container.categoryRepository.seedDefaultsIfEmpty()
         }

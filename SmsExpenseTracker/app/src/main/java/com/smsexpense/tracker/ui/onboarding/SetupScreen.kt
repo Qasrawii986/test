@@ -43,6 +43,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 class SetupViewModel(private val settings: SettingsRepository) : ViewModel() {
 
@@ -85,14 +87,14 @@ fun SetupScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("Welcome", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Let's configure your bank.", style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.welcome), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.setup_lets_configure), style = MaterialTheme.typography.bodyLarge)
 
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Step 1 — Bank SMS Sender ID", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.setup_step1), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "The app only reads messages from the senders you choose here.",
+                    stringResource(R.string.setup_step1_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 if (senders.isNotEmpty()) {
@@ -101,14 +103,14 @@ fun SetupScreen(
                     }
                 }
                 OutlinedButton(onClick = onChooseFromSms, modifier = Modifier.fillMaxWidth()) {
-                    Text("Choose from SMS")
+                    Text(stringResource(R.string.setup_choose_from_sms))
                 }
                 var manual by remember { mutableStateOf("") }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = manual,
                         onValueChange = { manual = it },
-                        label = { Text("Or enter manually (e.g. MYBANK)") },
+                        label = { Text(stringResource(R.string.setup_manual_hint)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                     )
@@ -119,27 +121,26 @@ fun SetupScreen(
                             manual = ""
                         },
                         enabled = manual.isNotBlank(),
-                    ) { Icon(Icons.Default.Add, contentDescription = "Add sender") }
+                    ) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.settings_add_sender)) }
                 }
             }
         }
 
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Step 2 — Import previous transactions?", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.setup_step2), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Optionally scan your existing bank SMS and import old payments. " +
-                        "You can also do this later from Settings.",
+                    stringResource(R.string.setup_step2_hint),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Button(
                     onClick = onImportHistorical,
                     enabled = senders.isNotEmpty(),
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Import Previous Transactions") }
+                ) { Text(stringResource(R.string.setup_import_button)) }
                 if (senders.isEmpty()) {
                     Text(
-                        "Add a Sender ID first to enable the import.",
+                        stringResource(R.string.setup_need_sender),
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
@@ -147,11 +148,11 @@ fun SetupScreen(
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = { viewModel.completeSetup(onFinish) }) { Text("Skip for now") }
+            TextButton(onClick = { viewModel.completeSetup(onFinish) }) { Text(stringResource(R.string.skip_for_now)) }
             Button(
                 onClick = { viewModel.completeSetup(onFinish) },
                 enabled = senders.isNotEmpty(),
-            ) { Text("Done") }
+            ) { Text(stringResource(R.string.done)) }
         }
     }
 }
