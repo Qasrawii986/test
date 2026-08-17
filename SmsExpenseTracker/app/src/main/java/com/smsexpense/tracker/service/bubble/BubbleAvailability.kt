@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.smsexpense.tracker.R
 
 /** Why the floating bubble can or cannot be shown right now. */
 enum class BubbleBlocker {
@@ -15,15 +16,13 @@ enum class BubbleBlocker {
     START_NOT_ALLOWED,
     ;
 
-    val userMessage: String
-        get() = when (this) {
-            NONE -> ""
-            DISABLED_IN_SETTINGS -> "The floating bubble is turned off in Settings."
-            NO_OVERLAY_PERMISSION ->
-                "Grant \"display over other apps\" to get the one-tap bubble. " +
-                    "This permission resets whenever the app is reinstalled."
-            START_NOT_ALLOWED -> "Android blocked the bubble from starting in the background."
-        }
+    /** Localized explanation. Takes a Context because it also feeds notifications. */
+    fun message(context: Context): String = when (this) {
+        NONE -> ""
+        DISABLED_IN_SETTINGS -> context.getString(R.string.blocker_disabled)
+        NO_OVERLAY_PERMISSION -> context.getString(R.string.blocker_no_overlay)
+        START_NOT_ALLOWED -> context.getString(R.string.blocker_start_not_allowed)
+    }
 }
 
 /** Runtime permission snapshot, surfaced in Settings so nothing fails silently. */

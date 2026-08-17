@@ -62,6 +62,8 @@ import com.smsexpense.tracker.domain.model.toTree
 import com.smsexpense.tracker.ui.components.formatAmount
 import com.smsexpense.tracker.ui.components.formatDate
 import com.smsexpense.tracker.ui.components.formatDateTime
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -98,12 +100,12 @@ fun HistoricalImportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Import Previous Transactions") },
+                title = { Text(stringResource(R.string.import_title)) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (state.step is ImportStep.Review) viewModel.backToSetup() else onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -115,8 +117,7 @@ fun HistoricalImportScreen(
                 Surface(shadowElevation = 8.dp) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         Text(
-                            "${review.selectedCount} selected • Total " +
-                                formatAmount(review.selectedTotal, review.currency),
+                            stringResource(R.string.import_summary, review.selectedCount, formatAmount(review.selectedTotal, review.currency)),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -127,16 +128,16 @@ fun HistoricalImportScreen(
                                 onClick = { showBulkDialog = true },
                                 enabled = review.selectedCount > 0,
                                 modifier = Modifier.weight(1f),
-                            ) { Text("Set Category") }
+                            ) { Text(stringResource(R.string.import_set_category)) }
                             Button(
                                 onClick = viewModel::requestImport,
                                 enabled = review.selectedCount > 0,
                                 modifier = Modifier.weight(1f),
-                            ) { Text("Import Selected") }
+                            ) { Text(stringResource(R.string.import_selected_button)) }
                             if (showBulkDialog) {
                                 CategoryPickerDialog(
                                     categories = state.categories,
-                                    title = "Category for ${review.selectedCount} transactions",
+                                    title = stringResource(R.string.import_category_for, review.selectedCount),
                                     onPick = {
                                         viewModel.setCategoryForSelected(it)
                                         showBulkDialog = false
@@ -164,13 +165,13 @@ fun HistoricalImportScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(Modifier.height(16.dp))
-                Text("Scanning SMS…", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.import_scanning), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "${step.messagesScanned} messages scanned",
+                    stringResource(R.string.import_scanned, step.messagesScanned),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    "${step.transactionsFound} transactions found",
+                    stringResource(R.string.import_found, step.transactionsFound),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -187,7 +188,7 @@ fun HistoricalImportScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(Modifier.height(16.dp))
-                Text("Importing…")
+                Text(stringResource(R.string.import_importing))
             }
             is ImportStep.Done -> Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
@@ -197,21 +198,21 @@ fun HistoricalImportScreen(
                 Text("✅", style = MaterialTheme.typography.displayMedium)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "${step.summary.imported} transactions imported",
+                    stringResource(R.string.import_imported, step.summary.imported),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
-                    "Total ${formatAmount(step.summary.total, step.summary.currency)}",
+                    stringResource(R.string.import_total, formatAmount(step.summary.total, step.summary.currency)),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 if (step.summary.duplicatesSkipped > 0) {
                     Text(
-                        "${step.summary.duplicatesSkipped} duplicates skipped",
+                        stringResource(R.string.import_duplicates, step.summary.duplicatesSkipped),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = onBack) { Text("Done") }
+                Button(onClick = onBack) { Text(stringResource(R.string.done)) }
             }
         }
     }
@@ -221,19 +222,17 @@ fun HistoricalImportScreen(
         if (review != null) {
             AlertDialog(
                 onDismissRequest = viewModel::dismissConfirm,
-                title = { Text("Import Transactions?") },
+                title = { Text(stringResource(R.string.import_confirm_title)) },
                 text = {
                     Text(
-                        "${review.selectedCount} transactions selected\n" +
-                            "Total: ${formatAmount(review.selectedTotal, review.currency)}\n\n" +
-                            "These transactions will be added to your expenses.",
+                        stringResource(R.string.import_confirm_body, review.selectedCount, formatAmount(review.selectedTotal, review.currency)),
                     )
                 },
                 confirmButton = {
-                    TextButton(onClick = viewModel::confirmImport) { Text("Yes, Import") }
+                    TextButton(onClick = viewModel::confirmImport) { Text(stringResource(R.string.import_yes_import)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = viewModel::dismissConfirm) { Text("Cancel") }
+                    TextButton(onClick = viewModel::dismissConfirm) { Text(stringResource(R.string.cancel)) }
                 },
             )
         }
@@ -255,24 +254,22 @@ private fun SetupContent(
         if (!state.permissionGranted) {
             Card {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("SMS access needed", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.import_needs_sms), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Importing previous transactions requires permission to read the SMS " +
-                            "already stored on this device. Without it the daily bubble still " +
-                            "works — only this import feature is unavailable.",
+                        stringResource(R.string.import_needs_sms_body),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Button(onClick = onGrantPermission) { Text("Grant SMS access") }
+                    Button(onClick = onGrantPermission) { Text(stringResource(R.string.picker_grant)) }
                 }
             }
         }
 
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Bank", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.import_bank), style = MaterialTheme.typography.titleMedium)
                 if (state.configuredSenders.isEmpty()) {
                     Text(
-                        "No Sender IDs configured yet — add one in Settings first.",
+                        stringResource(R.string.import_no_senders),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -292,22 +289,22 @@ private fun SetupContent(
 
         Card {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Period", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.import_period), style = MaterialTheme.typography.titleMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AssistChip(onClick = { viewModel.setPresetMonths(1) }, label = { Text("Last month") })
-                    AssistChip(onClick = { viewModel.setPresetMonths(3) }, label = { Text("3 months") })
-                    AssistChip(onClick = { viewModel.setPresetMonths(6) }, label = { Text("6 months") })
-                    AssistChip(onClick = { viewModel.setPresetMonths(12) }, label = { Text("1 year") })
+                    AssistChip(onClick = { viewModel.setPresetMonths(1) }, label = { Text(stringResource(R.string.import_last_month)) })
+                    AssistChip(onClick = { viewModel.setPresetMonths(3) }, label = { Text(stringResource(R.string.import_3_months)) })
+                    AssistChip(onClick = { viewModel.setPresetMonths(6) }, label = { Text(stringResource(R.string.import_6_months)) })
+                    AssistChip(onClick = { viewModel.setPresetMonths(12) }, label = { Text(stringResource(R.string.import_1_year)) })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     DateField(
-                        label = "From",
+                        label = stringResource(R.string.import_from),
                         millis = state.fromDate,
                         onPicked = viewModel::setFromDate,
                         modifier = Modifier.weight(1f),
                     )
                     DateField(
-                        label = "To",
+                        label = stringResource(R.string.import_to),
                         millis = state.toDate,
                         onPicked = viewModel::setToDate,
                         modifier = Modifier.weight(1f),
@@ -320,12 +317,12 @@ private fun SetupContent(
             onClick = viewModel::scan,
             enabled = state.permissionGranted && state.selectedSenders.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Scan SMS") }
+        ) { Text(stringResource(R.string.import_scan)) }
 
         if (state.history.isNotEmpty()) {
             Card {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Import History", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.import_history), style = MaterialTheme.typography.titleMedium)
                     state.history.forEach { record ->
                         Column(Modifier.padding(vertical = 4.dp)) {
                             Text(
@@ -369,7 +366,7 @@ private fun DateField(
                     showPicker = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { showPicker = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showPicker = false }) { Text(stringResource(R.string.cancel)) } },
         ) {
             DatePicker(state = pickerState)
         }
@@ -389,11 +386,11 @@ private fun ReviewContent(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("No new transactions found", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.import_none_new), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
             Text(
-                "${review.scanned} messages scanned" +
-                    if (review.alreadyImported > 0) ", ${review.alreadyImported} already imported" else "",
+                if (review.alreadyImported > 0) stringResource(R.string.import_scanned_with_imported, review.scanned, review.alreadyImported)
+                else stringResource(R.string.import_scanned_summary, review.scanned),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
@@ -405,13 +402,13 @@ private fun ReviewContent(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
             Text(
-                "Found: ${review.items.size} transactions" +
-                    if (review.alreadyImported > 0) " (${review.alreadyImported} already imported)" else "",
+                if (review.alreadyImported > 0) stringResource(R.string.import_found_with_imported, review.items.size, review.alreadyImported)
+                else stringResource(R.string.import_found_count, review.items.size),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f),
             )
             TextButton(onClick = viewModel::toggleSelectAll) {
-                Text(if (review.allSelected) "Deselect All" else "Select All")
+                Text(if (review.allSelected) stringResource(R.string.import_deselect_all) else stringResource(R.string.import_select_all))
             }
         }
         LazyColumn(
@@ -448,7 +445,7 @@ private fun ReviewContent(
                             onClick = { showCategoryDialog = true },
                             label = {
                                 Text(
-                                    category?.let { "${it.icon} ${it.name}" } ?: "❓ Uncategorized"
+                                    category?.let { "${it.icon} ${it.name}" } ?: ("❓ " + stringResource(R.string.uncategorized))
                                 )
                             },
                         )
@@ -463,7 +460,7 @@ private fun ReviewContent(
                 if (showCategoryDialog) {
                     CategoryPickerDialog(
                         categories = categories,
-                        title = "Category",
+                        title = stringResource(R.string.payment_category),
                         onPick = {
                             viewModel.setItemCategory(index, it)
                             showCategoryDialog = false
@@ -491,7 +488,7 @@ private fun CategoryPickerDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
                 Text(
-                    "❓ Uncategorized",
+                    ("❓ " + stringResource(R.string.uncategorized)),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -524,6 +521,6 @@ private fun CategoryPickerDialog(
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

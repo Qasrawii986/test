@@ -36,17 +36,15 @@ object QsTileMethod : QuickLaunchMethod {
 
     override fun describe(context: Context, backTapEnabled: Boolean) = QuickLaunchOption(
         id = id,
-        title = "Quick Settings tile",
-        description = "Swipe down and tap. Works from any screen, including the lock " +
-            "screen. No battery cost.",
+        title = context.getString(R.string.ql_tile_title),
+        description = context.getString(R.string.ql_tile_desc),
         supported = true,
         // The system does not tell us whether the user kept the tile.
         state = QuickLaunchState.UNKNOWN,
-        actionLabel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            "Add tile"
-        } else {
-            "How to add"
-        },
+        actionLabel = context.getString(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) R.string.ql_tile_add
+            else R.string.ql_tile_how
+        ),
     )
 
     override fun activate(context: Context, activity: Activity?) {
@@ -73,19 +71,19 @@ object HomeShortcutMethod : QuickLaunchMethod {
         val supported = ShortcutManagerCompat.isRequestPinShortcutSupported(context)
         return QuickLaunchOption(
             id = id,
-            title = "Home screen shortcut",
-            description = "A one-tap icon that opens quick actions directly.",
+            title = context.getString(R.string.ql_shortcut_title),
+            description = context.getString(R.string.ql_shortcut_desc),
             supported = supported,
             state = QuickLaunchState.UNKNOWN,
-            actionLabel = "Add shortcut",
-            unsupportedReason = if (supported) null else "Your launcher does not support pinning.",
+            actionLabel = context.getString(R.string.ql_shortcut_add),
+            unsupportedReason = if (supported) null else context.getString(R.string.ql_shortcut_unsupported),
         )
     }
 
     override fun activate(context: Context, activity: Activity?) {
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) return
         val shortcut = ShortcutInfoCompat.Builder(context, "quick-actions")
-            .setShortLabel("Quick expense")
+            .setShortLabel(context.getString(R.string.ql_shortcut_label))
             .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
             .setIntent(
                 Intent(context, QuickLaunchActivity::class.java).setAction(Intent.ACTION_VIEW)
@@ -121,19 +119,19 @@ object SystemBackTapMethod : QuickLaunchMethod {
         val supported = quickTapLikely || samsungPath
         return QuickLaunchOption(
             id = id,
-            title = "System back tap",
-            description = when {
-                quickTapLikely -> "Your device has Quick Tap. Set it to open this app: " +
-                    "Settings › System › Gestures › Quick Tap › Open app."
-                samsungPath -> "Samsung RegiStar is installed. Set a back-tap gesture to " +
-                    "open this app from Good Lock › RegiStar › Back-tap."
-                else -> "Your device has no built-in back-tap gesture."
-            },
+            title = context.getString(R.string.ql_system_title),
+            description = context.getString(
+                when {
+                    quickTapLikely -> R.string.ql_system_quicktap
+                    samsungPath -> R.string.ql_system_samsung
+                    else -> R.string.ql_system_none
+                }
+            ),
             supported = supported,
             state = QuickLaunchState.UNKNOWN,
-            actionLabel = "Open settings",
-            unsupportedReason = if (supported) null else
-                "No official back-tap on this device — use the sensor option below instead.",
+            actionLabel = context.getString(R.string.ql_open_settings),
+            unsupportedReason = if (supported) null
+                else context.getString(R.string.ql_system_unsupported),
         )
     }
 
@@ -164,15 +162,13 @@ object SensorBackTapMethod : QuickLaunchMethod {
         val supported = hasAccelerometer(context)
         return QuickLaunchOption(
             id = id,
-            title = "Triple back tap (in-app)",
-            description = "Tap the back of the phone three times. Works on any device with " +
-                "a motion sensor.",
+            title = context.getString(R.string.ql_sensor_title),
+            description = context.getString(R.string.ql_sensor_desc),
             supported = supported,
             state = if (backTapEnabled) QuickLaunchState.ACTIVE else QuickLaunchState.INACTIVE,
-            actionLabel = if (backTapEnabled) "Turn off" else "Turn on",
-            unsupportedReason = if (supported) null else "No accelerometer on this device.",
-            warning = "Android blocks sensors in the background, so this needs a permanent " +
-                "notification and uses extra battery. Occasional false triggers are possible.",
+            actionLabel = context.getString(if (backTapEnabled) R.string.ql_turn_off else R.string.ql_turn_on),
+            unsupportedReason = if (supported) null else context.getString(R.string.ql_sensor_no_accel),
+            warning = context.getString(R.string.ql_sensor_warning),
         )
     }
 
@@ -185,13 +181,12 @@ object AssistantMethod : QuickLaunchMethod {
 
     override fun describe(context: Context, backTapEnabled: Boolean) = QuickLaunchOption(
         id = id,
-        title = "Power button (assistant role)",
-        description = "Set this app as your digital assistant, then long-press the power " +
-            "button to open it.",
+        title = context.getString(R.string.ql_assistant_title),
+        description = context.getString(R.string.ql_assistant_desc),
         supported = true,
         state = QuickLaunchState.UNKNOWN,
-        actionLabel = "Open settings",
-        warning = "This replaces Gemini / Google Assistant as your assistant app.",
+        actionLabel = context.getString(R.string.ql_open_settings),
+        warning = context.getString(R.string.ql_assistant_warning),
     )
 
     override fun activate(context: Context, activity: Activity?) {
@@ -218,8 +213,11 @@ object QuickLaunchRegistry {
         AssistantMethod,
     )
 
-    fun describeAll(context: Context, backTapEnabled: Boolean): List<QuickLaunchOption> =
-        methods.map { it.describe(context, backTapEnabled) }
+    /** Descriptions are localized, so the context is wrapped with the app language. */
+    fun describeAll(context: Context, backTapEnabled: Boolean): List<QuickLaunchOption> {
+        val localized = com.smsexpense.tracker.util.AppLocale.wrap(context)
+        return methods.map { it.describe(localized, backTapEnabled) }
+    }
 
     fun byId(id: QuickLaunchId): QuickLaunchMethod? = methods.firstOrNull { it.id == id }
 }

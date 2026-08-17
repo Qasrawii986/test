@@ -41,6 +41,8 @@ import com.smsexpense.tracker.domain.repository.BubbleSettings
 import com.smsexpense.tracker.domain.repository.BubbleShape
 import com.smsexpense.tracker.ui.components.BubbleVisual
 import com.smsexpense.tracker.ui.components.toComposeShape
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 /**
  * Appearance controls with a live preview: the preview uses the very same
@@ -79,7 +81,7 @@ fun BubbleAppearanceControls(
         }
 
         // --- Size ---
-        Text("Size — ${size}dp", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.appearance_size, size), style = MaterialTheme.typography.bodyMedium)
         Slider(
             value = size.toFloat(),
             onValueChange = { size = it.toInt() },
@@ -88,19 +90,29 @@ fun BubbleAppearanceControls(
         )
 
         // --- Shape ---
-        Text("Shape", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.appearance_shape), style = MaterialTheme.typography.bodyMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BubbleShape.entries.forEach { shape ->
                 FilterChip(
                     selected = settings.shape == shape,
                     onClick = { onShapeChange(shape) },
-                    label = { Text(shape.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    label = {
+                        Text(
+                            stringResource(
+                                when (shape) {
+                                    BubbleShape.CIRCLE -> R.string.appearance_shape_circle
+                                    BubbleShape.ROUNDED -> R.string.appearance_shape_rounded
+                                    BubbleShape.SQUARE -> R.string.appearance_shape_square
+                                }
+                            )
+                        )
+                    },
                 )
             }
         }
 
         // --- Colour ---
-        Text("Colour", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.appearance_colour), style = MaterialTheme.typography.bodyMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BubbleSettings.PRESET_COLORS.forEach { argb ->
                 val selected = settings.colorArgb == argb
@@ -133,14 +145,14 @@ fun BubbleAppearanceControls(
             }
         }
         Text(
-            "\"A\" follows the app theme.",
+            stringResource(R.string.appearance_theme_hint),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         // --- Opacity ---
         Text(
-            "Opacity — ${(opacity * 100).toInt()}%",
+            stringResource(R.string.appearance_opacity, (opacity * 100).toInt()),
             style = MaterialTheme.typography.bodyMedium,
         )
         Slider(
@@ -153,7 +165,7 @@ fun BubbleAppearanceControls(
         // --- Content ---
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(
-                "Show the amount inside the bubble",
+                stringResource(R.string.appearance_show_amount),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -178,7 +190,7 @@ fun BubblePositionPicker(
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            "Drag the dot to where the bubble should appear.",
+            stringResource(R.string.position_hint),
             style = MaterialTheme.typography.bodySmall,
         )
         BoxWithConstraints(
@@ -235,23 +247,23 @@ fun BubblePositionPicker(
                     yPct = BubbleSettings.DEFAULT_Y_PERCENT
                     onPositionChange(xPct, yPct)
                 },
-                label = { Text("Reset") },
+                label = { Text(stringResource(R.string.position_reset)) },
             )
             FilterChip(
                 selected = false,
                 onClick = { xPct = 0f; onPositionChange(xPct, yPct) },
-                label = { Text("Left edge") },
+                label = { Text(stringResource(R.string.position_left)) },
             )
             FilterChip(
                 selected = false,
                 onClick = { xPct = 1f; onPositionChange(xPct, yPct) },
-                label = { Text("Right edge") },
+                label = { Text(stringResource(R.string.position_right)) },
             )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(
-                "Remember where I drag it",
+                stringResource(R.string.position_remember),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -259,9 +271,9 @@ fun BubblePositionPicker(
         }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f)) {
-                Text("Snap to the nearest edge", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.position_snap), style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "Keeps the bubble parked at a side instead of floating mid-screen.",
+                    stringResource(R.string.position_snap_hint),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

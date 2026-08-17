@@ -247,4 +247,73 @@
     <string name="notif_grant">منح الوصول للإشعارات</string>
     <string name="notif_search_apps">ابحث عن تطبيق</string>
     <string name="notif_pick_apps">اختر تطبيقات محفظتك وبنكك (%1$d محدد)</string>
+
+    <!-- Debug -->
+    <string name="debug_title">أدوات المطوّر</string>
+    <string name="debug_simulate">محاكاة رسالة</string>
+    <string name="debug_message_body">نص الرسالة</string>
+    <string name="debug_arabic_sample">مثال عربي</string>
+    <string name="debug_english_sample">مثال إنجليزي</string>
+    <string name="debug_cliq_sample">مثال كليك</string>
+    <string name="debug_respect_filter">تطبيق فلتر معرّف المرسل</string>
+    <string name="debug_test_parser">اختبار المحلل فقط</string>
+    <string name="debug_tools">الأدوات</string>
+    <string name="debug_trigger_bubble">إظهار الفقاعة</string>
+    <string name="debug_fake_payment">عملية وهمية</string>
+    <string name="debug_test_api">اختبار السيرفر</string>
+    <string name="debug_sync_now">مزامنة الآن</string>
+    <string name="debug_clear_db">تفريغ القاعدة</string>
+    <string name="debug_log">السجل</string>
+    <string name="debug_no_events">لا أحداث بعد</string>
+
+    <!-- Quick launch methods -->
+    <string name="ql_tile_title">بلاطة الإعدادات السريعة</string>
+    <string name="ql_tile_desc">اسحب للأسفل واضغط. تعمل من أي شاشة بما فيها شاشة القفل، وبلا أي استهلاك للبطارية.</string>
+    <string name="ql_tile_add">إضافة البلاطة</string>
+    <string name="ql_tile_how">كيف أضيفها</string>
+    <string name="ql_shortcut_title">اختصار على الشاشة الرئيسية</string>
+    <string name="ql_shortcut_desc">أيقونة بضغطة واحدة تفتح الإجراءات السريعة مباشرة.</string>
+    <string name="ql_shortcut_add">إضافة الاختصار</string>
+    <string name="ql_shortcut_unsupported">مشغّل الشاشة لديك لا يدعم تثبيت الاختصارات.</string>
+    <string name="ql_shortcut_label">مصروف سريع</string>
+    <string name="ql_system_title">نقر الظهر من النظام</string>
+    <string name="ql_system_quicktap">جهازك يدعم Quick Tap. اضبطه ليفتح هذا التطبيق من: الإعدادات › النظام › الإيماءات › Quick Tap › فتح تطبيق.</string>
+    <string name="ql_system_samsung">تطبيق Samsung RegiStar مثبّت. اضبط إيماءة نقر الظهر لفتح هذا التطبيق من Good Lock › RegiStar › Back-tap.</string>
+    <string name="ql_system_none">جهازك لا يوفّر إيماءة نقر ظهر مدمجة.</string>
+    <string name="ql_system_unsupported">لا يوجد نقر ظهر رسمي على هذا الجهاز — استخدم خيار المستشعرات أدناه.</string>
+    <string name="ql_open_settings">فتح الإعدادات</string>
+    <string name="ql_sensor_title">نقر الظهر ثلاثاً (داخل التطبيق)</string>
+    <string name="ql_sensor_desc">انقر ظهر الهاتف ثلاث مرات. يعمل على أي جهاز فيه مستشعر حركة.</string>
+    <string name="ql_sensor_warning">يحجب أندرويد المستشعرات في الخلفية، فتحتاج هذه الميزة إشعاراً دائماً وتستهلك بطارية إضافية. واحتمال التقاط خاطئ أحياناً قائم.</string>
+    <string name="ql_sensor_no_accel">لا يوجد مستشعر تسارع في هذا الجهاز.</string>
+    <string name="ql_turn_on">تشغيل</string>
+    <string name="ql_turn_off">إيقاف</string>
+    <string name="ql_assistant_title">زر التشغيل (دور المساعد)</string>
+    <string name="ql_assistant_desc">اجعل هذا التطبيق مساعدك الرقمي، ثم اضغط زر التشغيل مطوّلاً لفتحه.</string>
+    <string name="ql_assistant_warning">هذا يستبدل Gemini / مساعد Google كتطبيق مساعد لديك.</string>
+
+    <!-- Bubble blockers -->
+    <string name="blocker_disabled">الفقاعة العائمة مطفأة من الإعدادات.</string>
+    <string name="blocker_no_overlay">امنح صلاحية \"العرض فوق التطبيقات الأخرى\" للحصول على الفقاعة بضغطة واحدة. تُلغى هذه الصلاحية عند كل إعادة تثبيت للتطبيق.</string>
+    <string name="blocker_start_not_allowed">منع أندرويد تشغيل الفقاعة من الخلفية.</string>
+
+    <!-- Service notifications -->
+    <string name="notif_tap_to_categorize">اضغط لتصنيف هذه العملية</string>
+    <string name="panel_notification_title">إجراءات سريعة</string>
+    <string name="panel_channel">الإجراءات السريعة</string>
+    <string name="backtap_notification_title">نقر الظهر مفعّل</string>
+    <string name="backtap_notification_text">انقر ظهر الهاتف ٣ مرات لفتح الإجراءات السريعة</string>
+    <string name="backtap_channel">نقر الظهر</string>
+    <string name="backtap_channel_desc">يطلبه أندرويد لقراءة مستشعرات الحركة في الخلفية</string>
+
+    <!-- Import extras -->
+    <string name="import_category_for">تصنيف لـ %1$d عملية</string>
+    <string name="import_yes_import">نعم، استورد</string>
+    <string name="import_confirm_body">%1$d عملية محددة\nالإجمالي: %2$s\n\nستُضاف هذه العمليات إلى مصاريفك.</string>
+    <string name="import_total">الإجمالي %1$s</string>
+    <string name="import_found_count">تم العثور على %1$d عملية</string>
+    <string name="import_found_with_imported">تم العثور على %1$d عملية (%2$d مستوردة سابقاً)</string>
+    <string name="import_scanned_summary">تم فحص %1$d رسالة</string>
+    <string name="import_scanned_with_imported">تم فحص %1$d رسالة، %2$d مستوردة سابقاً</string>
+    <string name="picker_senders_prompt">الرسائل المحددة من %1$d مرسلين مختلفين. اختر أيّهم تريد إضافته:</string>
 </resources>

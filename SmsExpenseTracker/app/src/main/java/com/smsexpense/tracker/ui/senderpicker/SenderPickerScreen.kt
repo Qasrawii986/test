@@ -48,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.smsexpense.tracker.ui.components.formatDateTime
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 /**
  * In-app SMS picker. Android has no system intent for "pick an SMS", so this
@@ -86,10 +88,10 @@ fun SenderPickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Choose from SMS") },
+                title = { Text(stringResource(R.string.picker_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -103,14 +105,14 @@ fun SenderPickerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "${state.selectedCount} selected",
+                            stringResource(R.string.picker_selected, state.selectedCount),
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Button(
                             onClick = viewModel::addSelected,
                             enabled = state.selectedCount > 0,
-                        ) { Text("Add Selected") }
+                        ) { Text(stringResource(R.string.picker_add_selected)) }
                     }
                 }
             }
@@ -123,20 +125,18 @@ fun SenderPickerScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("SMS access needed", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.picker_needs_access), style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "To pick a Sender ID from your existing messages, the app needs " +
-                            "permission to read SMS. Messages are read on-device only and " +
-                            "nothing leaves your phone.",
+                        stringResource(R.string.picker_needs_access_body),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(Modifier.height(16.dp))
                     Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_SMS) }) {
-                        Text("Grant SMS access")
+                        Text(stringResource(R.string.picker_grant))
                     }
                     Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = onBack) { Text("Enter Sender ID manually instead") }
+                    TextButton(onClick = onBack) { Text(stringResource(R.string.picker_manual_instead)) }
                 }
             }
             state.loading -> {
@@ -151,14 +151,14 @@ fun SenderPickerScreen(
                     modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                ) { Text("No SMS found on this device") }
+                ) { Text(stringResource(R.string.picker_no_sms)) }
             }
             else -> {
                 Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                     OutlinedTextField(
                         value = state.query,
                         onValueChange = viewModel::setQuery,
-                        label = { Text("Search sender or text") },
+                        label = { Text(stringResource(R.string.picker_search)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     )
@@ -193,7 +193,7 @@ fun SenderPickerScreen(
                                         if (alreadyConfigured) {
                                             Spacer(Modifier.width(6.dp))
                                             Text(
-                                                "✓ added",
+                                                stringResource(R.string.picker_already_added),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.primary,
                                             )
@@ -223,12 +223,11 @@ fun SenderPickerScreen(
         var checked by remember(pending) { mutableStateOf(pending.toSet()) }
         AlertDialog(
             onDismissRequest = viewModel::dismissPending,
-            title = { Text("Senders found") },
+            title = { Text(stringResource(R.string.picker_senders_found)) },
             text = {
                 Column {
                     Text(
-                        "The selected messages come from ${pending.size} different senders. " +
-                            "Choose which ones to add:",
+                        stringResource(R.string.picker_senders_prompt, pending.size),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(Modifier.height(8.dp))
@@ -256,9 +255,9 @@ fun SenderPickerScreen(
                 TextButton(
                     onClick = { viewModel.confirmSenders(checked.toList()) },
                     enabled = checked.isNotEmpty(),
-                ) { Text("Add") }
+                ) { Text(stringResource(R.string.add)) }
             },
-            dismissButton = { TextButton(onClick = viewModel::dismissPending) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = viewModel::dismissPending) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }

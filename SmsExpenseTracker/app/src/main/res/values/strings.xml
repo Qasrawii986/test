@@ -247,4 +247,73 @@
     <string name="notif_grant">Grant notification access</string>
     <string name="notif_search_apps">Search apps</string>
     <string name="notif_pick_apps">Pick your wallet and bank apps (%1$d selected)</string>
+
+    <!-- Debug -->
+    <string name="debug_title">Developer Debug</string>
+    <string name="debug_simulate">Simulate SMS</string>
+    <string name="debug_message_body">Message body</string>
+    <string name="debug_arabic_sample">Arabic sample</string>
+    <string name="debug_english_sample">English sample</string>
+    <string name="debug_cliq_sample">CliQ sample</string>
+    <string name="debug_respect_filter">Respect Sender ID filter</string>
+    <string name="debug_test_parser">Test parser only</string>
+    <string name="debug_tools">Tools</string>
+    <string name="debug_trigger_bubble">Trigger bubble</string>
+    <string name="debug_fake_payment">Fake payment</string>
+    <string name="debug_test_api">Test API</string>
+    <string name="debug_sync_now">Sync now</string>
+    <string name="debug_clear_db">Clear DB</string>
+    <string name="debug_log">Log</string>
+    <string name="debug_no_events">No events yet</string>
+
+    <!-- Quick launch methods -->
+    <string name="ql_tile_title">Quick Settings tile</string>
+    <string name="ql_tile_desc">Swipe down and tap. Works from any screen, including the lock screen. No battery cost.</string>
+    <string name="ql_tile_add">Add tile</string>
+    <string name="ql_tile_how">How to add</string>
+    <string name="ql_shortcut_title">Home screen shortcut</string>
+    <string name="ql_shortcut_desc">A one-tap icon that opens quick actions directly.</string>
+    <string name="ql_shortcut_add">Add shortcut</string>
+    <string name="ql_shortcut_unsupported">Your launcher does not support pinning.</string>
+    <string name="ql_shortcut_label">Quick expense</string>
+    <string name="ql_system_title">System back tap</string>
+    <string name="ql_system_quicktap">Your device has Quick Tap. Set it to open this app: Settings › System › Gestures › Quick Tap › Open app.</string>
+    <string name="ql_system_samsung">Samsung RegiStar is installed. Set a back-tap gesture to open this app from Good Lock › RegiStar › Back-tap.</string>
+    <string name="ql_system_none">Your device has no built-in back-tap gesture.</string>
+    <string name="ql_system_unsupported">No official back-tap on this device — use the sensor option below instead.</string>
+    <string name="ql_open_settings">Open settings</string>
+    <string name="ql_sensor_title">Triple back tap (in-app)</string>
+    <string name="ql_sensor_desc">Tap the back of the phone three times. Works on any device with a motion sensor.</string>
+    <string name="ql_sensor_warning">Android blocks sensors in the background, so this needs a permanent notification and uses extra battery. Occasional false triggers are possible.</string>
+    <string name="ql_sensor_no_accel">No accelerometer on this device.</string>
+    <string name="ql_turn_on">Turn on</string>
+    <string name="ql_turn_off">Turn off</string>
+    <string name="ql_assistant_title">Power button (assistant role)</string>
+    <string name="ql_assistant_desc">Set this app as your digital assistant, then long-press the power button to open it.</string>
+    <string name="ql_assistant_warning">This replaces Gemini / Google Assistant as your assistant app.</string>
+
+    <!-- Bubble blockers -->
+    <string name="blocker_disabled">The floating bubble is turned off in Settings.</string>
+    <string name="blocker_no_overlay">Grant \"display over other apps\" to get the one-tap bubble. This permission resets whenever the app is reinstalled.</string>
+    <string name="blocker_start_not_allowed">Android blocked the bubble from starting in the background.</string>
+
+    <!-- Service notifications -->
+    <string name="notif_tap_to_categorize">Tap to categorize this payment</string>
+    <string name="panel_notification_title">Quick actions</string>
+    <string name="panel_channel">Quick actions</string>
+    <string name="backtap_notification_title">Back tap active</string>
+    <string name="backtap_notification_text">Tap the back of your phone 3 times to open quick actions</string>
+    <string name="backtap_channel">Back tap</string>
+    <string name="backtap_channel_desc">Required by Android to read motion sensors in the background</string>
+
+    <!-- Import extras -->
+    <string name="import_category_for">Category for %1$d transactions</string>
+    <string name="import_yes_import">Yes, Import</string>
+    <string name="import_confirm_body">%1$d transactions selected\nTotal: %2$s\n\nThese transactions will be added to your expenses.</string>
+    <string name="import_total">Total %1$s</string>
+    <string name="import_found_count">Found: %1$d transactions</string>
+    <string name="import_found_with_imported">Found: %1$d transactions (%2$d already imported)</string>
+    <string name="import_scanned_summary">%1$d messages scanned</string>
+    <string name="import_scanned_with_imported">%1$d messages scanned, %2$d already imported</string>
+    <string name="picker_senders_prompt">The selected messages come from %1$d different senders. Choose which ones to add:</string>
 </resources>

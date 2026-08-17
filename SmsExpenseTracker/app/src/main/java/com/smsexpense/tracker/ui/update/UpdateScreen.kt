@@ -37,6 +37,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.smsexpense.tracker.service.update.ApkInstaller
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,10 +66,10 @@ fun UpdateScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Updates") },
+                title = { Text(stringResource(R.string.updates)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -83,7 +85,7 @@ fun UpdateScreen(
         ) {
             Card {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Installed version", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.update_installed_version), style = MaterialTheme.typography.labelMedium)
                     Text(
                         "${state.currentVersionName} (build ${state.currentVersionCode})",
                         style = MaterialTheme.typography.titleMedium,
@@ -95,15 +97,14 @@ fun UpdateScreen(
             if (!state.canInstall) {
                 Card {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Permission needed", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.update_permission_title), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "To install updates itself, this app needs the \"install unknown " +
-                                "apps\" permission. You only grant it once.",
+                            stringResource(R.string.update_permission_body),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Button(onClick = {
                             context.startActivity(ApkInstaller.unknownSourcesIntent(context))
-                        }) { Text("Open permission settings") }
+                        }) { Text(stringResource(R.string.update_permission_button)) }
                     }
                 }
             }
@@ -111,35 +112,35 @@ fun UpdateScreen(
             when (val stage = state.stage) {
                 UpdateStage.Idle -> {
                     Button(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
-                        Text("Check for updates")
+                        Text(stringResource(R.string.settings_check_updates))
                     }
                 }
                 UpdateStage.Checking -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(modifier = Modifier.height(20.dp))
                         Spacer(Modifier.padding(horizontal = 8.dp))
-                        Text("Checking…")
+                        Text(stringResource(R.string.update_checking))
                     }
                 }
                 is UpdateStage.UpToDate -> {
                     Card {
                         Column(Modifier.padding(16.dp)) {
-                            Text("✅ You're up to date", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.update_up_to_date), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Version ${stage.versionName} is the latest release.",
+                                stringResource(R.string.update_latest, stage.versionName),
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
                     OutlinedButton(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
-                        Text("Check again")
+                        Text(stringResource(R.string.update_check_again))
                     }
                 }
                 is UpdateStage.Available -> {
                     Card {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                "Version ${stage.info.versionName} available",
+                                stringResource(R.string.update_available, stage.info.versionName),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -152,10 +153,10 @@ fun UpdateScreen(
                         onClick = viewModel::download,
                         enabled = state.canInstall,
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Download update") }
+                    ) { Text(stringResource(R.string.update_download)) }
                 }
                 is UpdateStage.Downloading -> {
-                    Text("Downloading… ${(stage.progress * 100).toInt()}%")
+                    Text(stringResource(R.string.update_downloading, (stage.progress * 100).toInt()))
                     LinearProgressIndicator(
                         progress = { stage.progress },
                         modifier = Modifier.fillMaxWidth(),
@@ -165,18 +166,17 @@ fun UpdateScreen(
                     Card {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                "Ready to install ${stage.info.versionName}",
+                                stringResource(R.string.update_ready, stage.info.versionName),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                "Android will show its own confirmation screen. The app closes " +
-                                    "while it installs, then you reopen it — your data is kept.",
+                                stringResource(R.string.update_ready_body),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
                     }
                     Button(onClick = viewModel::install, modifier = Modifier.fillMaxWidth()) {
-                        Text("Install now")
+                        Text(stringResource(R.string.update_install_now))
                     }
                 }
                 is UpdateStage.Installing -> {
@@ -186,14 +186,12 @@ fun UpdateScreen(
                                 CircularProgressIndicator(modifier = Modifier.height(20.dp))
                                 Spacer(Modifier.padding(horizontal = 8.dp))
                                 Text(
-                                    "Installing ${stage.info.versionName}…",
+                                    stringResource(R.string.update_installing, stage.info.versionName),
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }
                             Text(
-                                "Confirm on Android's install screen. This app will close while " +
-                                    "it is replaced — reopen it afterwards and this screen will " +
-                                    "confirm the new version.",
+                                stringResource(R.string.update_installing_body),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
@@ -201,29 +199,29 @@ fun UpdateScreen(
                     OutlinedButton(
                         onClick = viewModel::installViaSystemInstaller,
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Nothing appeared — try again") }
+                    ) { Text(stringResource(R.string.update_nothing_appeared)) }
                 }
                 is UpdateStage.Installed -> {
                     Card {
                         Column(Modifier.padding(16.dp)) {
                             Text(
-                                "✅ Updated to ${stage.versionName}",
+                                stringResource(R.string.update_success, stage.versionName),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                "The update installed successfully.",
+                                stringResource(R.string.update_success_body),
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
                     OutlinedButton(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
-                        Text("Check for updates")
+                        Text(stringResource(R.string.settings_check_updates))
                     }
                 }
                 is UpdateStage.Error -> {
                     Card {
                         Column(Modifier.padding(16.dp)) {
-                            Text("Something went wrong", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.update_error), style = MaterialTheme.typography.titleMedium)
                             Text(stage.message, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -231,10 +229,10 @@ fun UpdateScreen(
                         Button(
                             onClick = viewModel::installViaSystemInstaller,
                             modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Install with system installer") }
+                        ) { Text(stringResource(R.string.update_system_installer)) }
                     }
                     OutlinedButton(onClick = viewModel::check, modifier = Modifier.fillMaxWidth()) {
-                        Text("Try again")
+                        Text(stringResource(R.string.try_again))
                     }
                 }
             }

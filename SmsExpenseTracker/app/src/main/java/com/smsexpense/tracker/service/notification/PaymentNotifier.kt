@@ -17,6 +17,7 @@ import com.smsexpense.tracker.domain.model.Category
 import com.smsexpense.tracker.domain.model.Payment
 import com.smsexpense.tracker.service.bubble.BubbleBlocker
 import com.smsexpense.tracker.ui.components.formatAmount
+import com.smsexpense.tracker.util.AppLocale
 import com.smsexpense.tracker.util.AppLog
 
 /**
@@ -47,9 +48,10 @@ object PaymentNotifier {
 
         val title = formatAmount(payment.amount, payment.currency) +
             (payment.merchant?.let { " • $it" } ?: "")
+        val localized = com.smsexpense.tracker.util.AppLocale.wrap(context)
         val text = when (blocker) {
-            BubbleBlocker.NONE -> "Tap to categorize this payment"
-            else -> blocker.userMessage
+            BubbleBlocker.NONE -> localized.getString(R.string.notif_tap_to_categorize)
+            else -> blocker.message(localized)
         }
 
         val contentIntent = PendingIntent.getActivity(
@@ -106,11 +108,12 @@ object PaymentNotifier {
 
     private fun createChannel(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val localized = AppLocale.wrap(context)
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Payment alerts",
+            localized.getString(R.string.bubble_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
-        ).apply { description = "Detected payments waiting to be categorized" }
+        ).apply { description = localized.getString(R.string.bubble_channel_desc) }
         manager.createNotificationChannel(channel)
     }
 }

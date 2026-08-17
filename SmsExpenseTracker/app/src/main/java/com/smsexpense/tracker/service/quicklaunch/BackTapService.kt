@@ -98,6 +98,7 @@ class BackTapService : LifecycleService(), SensorEventListener {
     }
 
     private fun buildNotification(): Notification {
+        val localized = com.smsexpense.tracker.util.AppLocale.wrap(this)
         val contentIntent = PendingIntent.getActivity(
             this,
             0,
@@ -106,8 +107,8 @@ class BackTapService : LifecycleService(), SensorEventListener {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Back tap active")
-            .setContentText("Tap the back of your phone 3 times to open quick actions")
+            .setContentTitle(localized.getString(R.string.backtap_notification_title))
+            .setContentText(localized.getString(R.string.backtap_notification_text))
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
@@ -115,11 +116,14 @@ class BackTapService : LifecycleService(), SensorEventListener {
     }
 
     private fun createChannel() {
+        val localized = com.smsexpense.tracker.util.AppLocale.wrap(this)
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Back tap", NotificationManager.IMPORTANCE_MIN).apply {
-                description = "Required by Android to read motion sensors in the background"
-            }
+            NotificationChannel(
+                CHANNEL_ID,
+                localized.getString(R.string.backtap_channel),
+                NotificationManager.IMPORTANCE_MIN,
+            ).apply { description = localized.getString(R.string.backtap_channel_desc) }
         )
     }
 

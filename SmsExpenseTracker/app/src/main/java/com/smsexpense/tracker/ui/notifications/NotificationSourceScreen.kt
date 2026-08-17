@@ -47,6 +47,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 data class InstalledApp(val packageName: String, val label: String)
 
@@ -136,10 +138,10 @@ fun NotificationSourceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Payment notifications") },
+                title = { Text(stringResource(R.string.notif_source_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -149,21 +151,18 @@ fun NotificationSourceScreen(
             Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        if (state.accessGranted) "✅ Notification access granted"
-                        else "⚠️ Notification access needed",
+                        if (state.accessGranted) stringResource(R.string.notif_access_granted)
+                        else stringResource(R.string.notif_access_needed),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        "Contactless taps cannot be read directly — Android gives the " +
-                            "transaction only to the wallet app. Reading the payment " +
-                            "notification your wallet or bank posts is the closest signal, " +
-                            "and it usually arrives before the SMS.",
+                        stringResource(R.string.notif_access_body),
                         style = MaterialTheme.typography.bodySmall,
                     )
                     if (!state.accessGranted) {
                         Button(onClick = {
                             context.startActivity(PaymentNotificationListener.settingsIntent())
-                        }) { Text("Grant notification access") }
+                        }) { Text(stringResource(R.string.notif_grant)) }
                     }
                 }
             }
@@ -171,12 +170,12 @@ fun NotificationSourceScreen(
             OutlinedTextField(
                 value = state.query,
                 onValueChange = viewModel::setQuery,
-                label = { Text("Search apps") },
+                label = { Text(stringResource(R.string.notif_search_apps)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
             Text(
-                "Pick your wallet and bank apps (${state.watched.size} selected)",
+                stringResource(R.string.notif_pick_apps, state.watched.size),
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(16.dp),
             )

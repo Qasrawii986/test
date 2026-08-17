@@ -48,6 +48,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.smsexpense.tracker.R
 
 data class QuickLaunchUiState(
     val options: List<QuickLaunchOption> = emptyList(),
@@ -126,10 +128,10 @@ fun QuickLaunchScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Quick launch") },
+                title = { Text(stringResource(R.string.quick_launch_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -144,8 +146,7 @@ fun QuickLaunchScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Ways to open quick actions from anywhere. Only what your device actually " +
-                    "supports is listed.",
+                stringResource(R.string.quick_launch_intro),
                 style = MaterialTheme.typography.bodyMedium,
             )
 
@@ -164,7 +165,7 @@ fun QuickLaunchScreen(
                             )
                             when (option.state) {
                                 QuickLaunchState.ACTIVE -> Text(
-                                    "● On",
+                                    stringResource(R.string.quick_launch_on),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -185,7 +186,7 @@ fun QuickLaunchScreen(
                             ) { Text(option.actionLabel) }
 
                             if (option.id == QuickLaunchId.SENSOR_BACK_TAP && state.backTapEnabled) {
-                                Text("Sensitivity", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.quick_launch_sensitivity), style = MaterialTheme.typography.labelMedium)
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     BackTapSensitivity.entries.forEach { level ->
                                         FilterChip(
@@ -198,7 +199,7 @@ fun QuickLaunchScreen(
                             }
                         } else {
                             Text(
-                                option.unsupportedReason ?: "Not supported on this device.",
+                                option.unsupportedReason ?: stringResource(R.string.quick_launch_unsupported),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

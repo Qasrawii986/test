@@ -18,6 +18,11 @@ class AppLocaleTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
+    @org.junit.Before
+    fun setUp() {
+        AppLocale.prime(AppLocale.SYSTEM)
+    }
+
     @After
     fun tearDown() {
         AppLocale.prime(AppLocale.SYSTEM)
@@ -69,6 +74,62 @@ class AppLocaleTest {
             AppLocale.prime(language)
             val text = AppLocale.wrap(context).getString(R.string.dashboard_transactions, 7)
             assertTrue("$language dropped the count: $text", text.contains("7"))
+        }
+    }
+
+    @Test
+    fun `every screen's strings resolve in arabic, including services`() {
+        AppLocale.prime(AppLocale.ARABIC)
+        val ar = AppLocale.wrap(context)
+        // One string from each area that was wired up, so a missed translation or a
+        // wrong resource id fails here instead of surfacing as English on a screen.
+        listOf(
+            R.string.import_title, R.string.picker_title, R.string.updates,
+            R.string.quick_launch_title, R.string.notif_source_title, R.string.debug_title,
+            R.string.ql_tile_title, R.string.ql_sensor_warning, R.string.blocker_no_overlay,
+            R.string.backtap_notification_text, R.string.panel_notification_title,
+            R.string.appearance_shape_circle, R.string.position_snap,
+        ).forEach { id ->
+            val text = ar.getString(id)
+            assertTrue("resource $id is empty in Arabic", text.isNotBlank())
+            // Arabic text must contain at least one Arabic letter.
+            assertTrue(
+                "resource $id looks untranslated: $text",
+                text.any { it in '؀'..'ۿ' },
+            )
+        }
+    }
+
+    @Test
+    fun `bubble blocker messages are localized per language`() {
+        AppLocale.prime(AppLocale.ARABIC)
+        val arabic = com.smsexpense.tracker.service.bubble.BubbleBlocker.NO_OVERLAY_PERMISSION
+            .message(AppLocale.wrap(context))
+        AppLocale.prime(AppLocale.ENGLISH)
+        val english = com.smsexpense.tracker.service.bubble.BubbleBlocker.NO_OVERLAY_PERMISSION
+            .message(AppLocale.wrap(context))
+        assertNotEquals(arabic, english)
+        assertEquals("", com.smsexpense.tracker.service.bubble.BubbleBlocker.NONE.message(context))
+    }
+
+    @Test
+    fun `quick launch options are described in the selected language`() {
+        // Each method is asked directly with an explicitly localized context, rather
+        // than through the registry: the registry reads the process-wide cached
+        // language, which the Application's own collector may re-prime at any moment.
+        fun describeIn(language: String) = run {
+            AppLocale.prime(language)
+            val localized = AppLocale.wrap(context)
+            com.smsexpense.tracker.service.quicklaunch.QuickLaunchRegistry.methods
+                .map { it.describe(localized, backTapEnabled = false) }
+        }
+
+        val arabic = describeIn(AppLocale.ARABIC)
+        val english = describeIn(AppLocale.ENGLISH)
+
+        arabic.zip(english).forEach { (ar, en) ->
+            assertNotEquals("${ar.id} title not translated", ar.title, en.title)
+            assertNotEquals("${ar.id} description not translated", ar.description, en.description)
         }
     }
 

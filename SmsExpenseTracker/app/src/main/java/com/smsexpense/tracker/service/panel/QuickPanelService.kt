@@ -193,7 +193,7 @@ class QuickPanelService : Service() {
     private fun buildNotification(): Notification =
         NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Quick actions")
+            .setContentTitle(com.smsexpense.tracker.util.AppLocale.wrap(this).getString(R.string.panel_notification_title))
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)
             .build()
@@ -201,7 +201,11 @@ class QuickPanelService : Service() {
     private fun createChannel() {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Quick actions", NotificationManager.IMPORTANCE_MIN)
+            NotificationChannel(
+                CHANNEL_ID,
+                com.smsexpense.tracker.util.AppLocale.wrap(this).getString(R.string.panel_channel),
+                NotificationManager.IMPORTANCE_MIN,
+            )
         )
     }
 

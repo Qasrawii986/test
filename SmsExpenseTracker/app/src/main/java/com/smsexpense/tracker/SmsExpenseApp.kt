@@ -96,11 +96,13 @@ class SmsExpenseApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
-        // Seed the cached locale before any UI or overlay is built.
+        // Seed the cached locale once. Deliberately not a long-lived collector:
+        // re-priming on every emission could overwrite a language the user just
+        // picked with a stale value, and setLanguage already primes on change.
         container.applicationScope.launch {
-            container.settingsRepository.language.collect {
-                com.smsexpense.tracker.util.AppLocale.prime(it)
-            }
+            com.smsexpense.tracker.util.AppLocale.prime(
+                container.settingsRepository.language.first()
+            )
         }
         container.applicationScope.launch {
             container.categoryRepository.seedDefaultsIfEmpty()
