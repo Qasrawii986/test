@@ -310,7 +310,7 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 
 ## Tests
 
-218 unit tests run on the JVM (no device needed):
+219 unit tests run on the JVM (no device needed):
 
 - `SmsParserTest` — Arabic/English payments, currencies, decimal separators,
   Arabic-Indic digits, multipart bodies, merchants, salary/transfer/OTP/refund
@@ -345,6 +345,9 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 - `DataStoreSettingsTest` — auto-hide clamping against the real repository:
   0 means never rather than being raised to the minimum, out-of-range values
   are clamped into the band.
+- `AppLocaleTest` — resource resolution per language, RTL, translation coverage
+  across every screen, and that a primed language is not overwritten by the
+  app's own startup seeding.
 - `MainFlowTest` (androidTest) — full UI flow on a device: create category →
   simulate payment → categorize → dashboard updates.
 

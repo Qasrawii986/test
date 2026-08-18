@@ -121,9 +121,8 @@ class AppLocaleTest {
 
     @Test
     fun `quick launch options are described in the selected language`() {
-        // Each method is asked directly with an explicitly localized context, rather
-        // than through the registry: the registry reads the process-wide cached
-        // language, which the Application's own collector may re-prime at any moment.
+        // Each method is asked directly with an explicitly localized context rather
+        // than through the registry, which reads the process-wide cached language.
         fun describeIn(language: String) = run {
             AppLocale.prime(language)
             val localized = AppLocale.wrap(context)
@@ -146,5 +145,26 @@ class AppLocaleTest {
             listOf(AppLocale.SYSTEM, AppLocale.ENGLISH, AppLocale.ARABIC),
             AppLocale.SUPPORTED,
         )
+    }
+
+    @Test
+    fun `a primed language survives the app's own startup seeding`() {
+        // The Application seeds the cached locale from settings. While that
+        // seeding was asynchronous it landed a few hundred milliseconds into the
+        // process and overwrote whatever had been primed in the meantime — which
+        // reverted a language picked inside that window, and made every test that
+        // primes a language racy. Seeding is synchronous now; nothing may land later.
+        ApplicationProvider.getApplicationContext<Context>()
+
+        AppLocale.prime(AppLocale.ARABIC)
+
+        repeat(12) {
+            Thread.sleep(25)
+            assertEquals(
+                "something overwrote the primed language after startup",
+                AppLocale.ARABIC,
+                AppLocale.current(),
+            )
+        }
     }
 }

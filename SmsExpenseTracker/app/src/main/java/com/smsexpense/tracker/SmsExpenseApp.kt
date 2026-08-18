@@ -102,14 +102,18 @@ class SmsExpenseApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
-        // Seed the cached locale once. Deliberately not a long-lived collector:
-        // re-priming on every emission could overwrite a language the user just
-        // picked with a stale value, and setLanguage already primes on change.
-        container.applicationScope.launch {
-            com.smsexpense.tracker.util.AppLocale.prime(
-                container.settingsRepository.language.first()
-            )
-        }
+        // Seed the cached locale synchronously. An async seed lands hundreds of
+        // milliseconds into startup and overwrites whatever was primed in the
+        // meantime — reverting a language the user picked inside that window,
+        // and making anything that reads the locale racy. attachBaseContext
+        // already reads it this way; one small DataStore read, once.
+        runCatching {
+            kotlinx.coroutines.runBlocking {
+                com.smsexpense.tracker.util.AppLocale.prime(
+                    container.settingsRepository.language.first()
+                )
+            }
+        }.onFailure { com.smsexpense.tracker.util.AppLog.w("Could not read the saved language", it) }
         container.applicationScope.launch {
             container.categoryRepository.seedDefaultsIfEmpty()
             container.splitRepository.seedSelfIfEmpty()
