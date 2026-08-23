@@ -63,8 +63,6 @@
     <string name="bubble_later">لاحقاً</string>
     <string name="bubble_collapse">طي</string>
     <string name="bubble_dismiss">إخفاء الفقاعة</string>
-    <string name="bubble_drag_here">اسحب هنا للإخفاء</string>
-    <string name="bubble_release">أفلت للإخفاء</string>
     <string name="chips_back">‹ رجوع</string>
 
     <!-- Quick panel -->

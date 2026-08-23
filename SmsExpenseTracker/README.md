@@ -237,6 +237,35 @@ you dismiss it by picking a category, dragging it to the bin, or tapping Later.
 The cost is that the overlay and its foreground-service notification stay up,
 so the setting says so rather than hiding it.
 
+## Drag-to-dismiss target (v1.12)
+
+Dragging the bubble now reveals the same target Android shows for its own
+bubbles — a dark circle with a white ✕ at the bottom of the screen over a
+fading scrim — instead of a trash can.
+
+**Why it is drawn by the app.** The system's dismiss target lives in SystemUI
+(`com.android.wm.shell`, `MagnetizedObject` / `MagneticTarget`) and is not
+reachable from a `TYPE_APPLICATION_OVERLAY` window; no public API exposes it,
+which is why every floating-bubble app draws its own. The real
+`Notification.BubbleMetadata` API does get the system target, but it only
+accepts `MessagingStyle` conversation notifications tied to a shortcut, and it
+replaces the bubble with a system-drawn one — which would discard the
+configurable size, shape, colour and background image. So the target is
+reproduced rather than borrowed.
+
+**Magnetic capture.** `DismissMagnet` decides when the target takes the bubble:
+a circular reach of 90dp around the ✕, measured from the bubble's centre, so
+the target pulls it in from any direction rather than needing an exact hit. On
+capture the bubble snaps to the centre of the ✕, the circle swells, and the
+phone buzzes. The finger position is tracked separately from the drawn position
+so dragging back out escapes cleanly.
+
+**Navigation bar.** The bubble's window uses `FLAG_LAYOUT_NO_LIMITS` and spans
+the whole display, while the target's window stops above the navigation bar, so
+the magnet subtracts the bottom inset. Without that it sat a full nav bar below
+the ✕ actually on screen — on a 3-button bar, wide enough to miss the target
+entirely.
+
 ## Server sync (optional, off by default)
 
 The app is **offline-first**: Room is the source of truth and nothing requires
@@ -310,7 +339,7 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 
 ## Tests
 
-219 unit tests run on the JVM (no device needed):
+234 unit tests run on the JVM (no device needed):
 
 - `SmsParserTest` — Arabic/English payments, currencies, decimal separators,
   Arabic-Indic digits, multipart bodies, merchants, salary/transfer/OTP/refund
@@ -348,6 +377,10 @@ pipeline are pure Kotlin (JVM-testable, no Android deps).
 - `AppLocaleTest` — resource resolution per language, RTL, translation coverage
   across every screen, and that a primed language is not overwritten by the
   app's own startup seeding.
+- `DismissMagnetTest` — where the ✕ sits and when it captures: circular reach
+  rather than a rectangular band, density-scaled, unaffected by bubble size,
+  never capturing on an unknown screen size, and correct once the navigation
+  bar inset is applied.
 - `MainFlowTest` (androidTest) — full UI flow on a device: create category →
   simulate payment → categorize → dashboard updates.
 

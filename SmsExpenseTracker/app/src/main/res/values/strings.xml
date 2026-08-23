@@ -63,8 +63,6 @@
     <string name="bubble_later">Later</string>
     <string name="bubble_collapse">Collapse</string>
     <string name="bubble_dismiss">Dismiss bubble</string>
-    <string name="bubble_drag_here">Drag here to dismiss</string>
-    <string name="bubble_release">Release to dismiss</string>
     <string name="chips_back">‹ Back</string>
 
     <!-- Quick panel -->

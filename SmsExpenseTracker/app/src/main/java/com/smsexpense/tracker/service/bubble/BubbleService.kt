@@ -59,10 +59,10 @@ class BubbleService : Service() {
     private var layoutParams: WindowManager.LayoutParams? = null
 
     // Drag-to-dismiss target (separate overlay window pinned to the bottom).
-    private var trashView: ComposeView? = null
-    private var trashOwner: OverlayViewOwner? = null
-    internal val trashVisible = MutableStateFlow(false)
-    internal val trashActive = MutableStateFlow(false)
+    private var dismissView: ComposeView? = null
+    private var dismissOwner: OverlayViewOwner? = null
+    internal val dismissVisible = MutableStateFlow(false)
+    internal val dismissActive = MutableStateFlow(false)
 
     private val queue = ArrayDeque<Long>()
     internal val currentPayment = MutableStateFlow<Payment?>(null)
@@ -77,6 +77,9 @@ class BubbleService : Service() {
     private var watchJob: Job? = null
     /** Where the panel sat before an editor moved it clear of the keyboard. */
     private var positionBeforeEditing: Pair<Int, Int>? = null
+    /** Where the finger has dragged to, which the magnet may override on screen. */
+    private var freeX = 0f
+    private var freeY = 0f
     internal val appearance = MutableStateFlow(
         com.smsexpense.tracker.domain.repository.BubbleSettings(
             enabled = true, autoHideSeconds = 45,
@@ -290,28 +293,59 @@ class BubbleService : Service() {
         startAutoHideTimer() // give the user a fresh window while the panel is open
     }
 
+    /**
+     * Moves the bubble, then lets the dismiss target capture it.
+     *
+     * The finger position is tracked separately from the drawn position: once
+     * the target captures the bubble it is pinned to the target's centre, so
+     * the rendered position stops following the finger. Without a free
+     * position to keep accumulating into, dragging back out would start from
+     * the target and the bubble could never escape.
+     */
     private fun moveBubbleBy(dx: Float, dy: Float) {
         val params = layoutParams ?: return
         val view = overlayView ?: return
-        params.x = (params.x + dx.toInt()).coerceAtLeast(0)
-        params.y = (params.y + dy.toInt()).coerceAtLeast(0)
+        freeX += dx
+        freeY += dy
+
+        val captured = isWithinMagnet(freeX, freeY)
+        if (captured) {
+            val (targetX, targetY) = dismissTargetTopLeft()
+            params.x = targetX
+            params.y = targetY
+        } else {
+            params.x = freeX.toInt().coerceAtLeast(0)
+            params.y = freeY.toInt().coerceAtLeast(0)
+        }
         try {
             windowManager?.updateViewLayout(view, params)
         } catch (e: Exception) {
             AppLog.w("updateViewLayout failed", e)
         }
-        trashActive.value = isOverTrash(params)
+
+        if (captured != dismissActive.value) {
+            dismissActive.value = captured
+            // The system buzzes on capture and on escape; the snap is meant to
+            // be felt, since the bubble is under the finger and hard to see.
+            runCatching {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            }
+        }
     }
 
     private fun onDragStarted() {
         autoHideJob?.cancel() // don't vanish mid-drag
-        showTrashTarget()
+        layoutParams?.let {
+            freeX = it.x.toFloat()
+            freeY = it.y.toFloat()
+        }
+        showDismissTarget()
     }
 
     private fun onDragFinished() {
-        val droppedOnTrash = trashActive.value
-        hideTrashTarget()
-        if (droppedOnTrash) {
+        val dismissed = dismissActive.value
+        hideDismissTarget()
+        if (dismissed) {
             // Same outcome as "Later": keep the payment, drop the bubble.
             onDismissed()
         } else {
@@ -334,19 +368,41 @@ class BubbleService : Service() {
             .onFailure { AppLog.w("snap to edge failed", it) }
     }
 
-    /** Bottom-centre hot zone: the lower sixth of the screen, middle half horizontally. */
-    private fun isOverTrash(params: WindowManager.LayoutParams): Boolean {
+    private fun dismissTargetTopLeft(): Pair<Int, Int> {
         val (width, height) = screenSize()
-        if (width == 0 || height == 0) return false
-        val half = bubbleSizePx() / 2
-        val bubbleCenterX = params.x + half
-        val bubbleCenterY = params.y + half
-        val inBottomBand = bubbleCenterY > height * 0.8f
-        val inCentreBand = bubbleCenterX > width * 0.25f && bubbleCenterX < width * 0.75f
-        return inBottomBand && inCentreBand
+        return DismissMagnet.snapTopLeft(
+            bubbleSizePx(), width, height, resources.displayMetrics.density, bottomInsetPx(),
+        )
     }
 
-    /** Uses the configured bubble size so the trash zone matches what is on screen. */
+    private fun isWithinMagnet(x: Float, y: Float): Boolean {
+        val (width, height) = screenSize()
+        return DismissMagnet.captures(
+            x, y, bubbleSizePx(), width, height, resources.displayMetrics.density, bottomInsetPx(),
+        )
+    }
+
+    /**
+     * Height of the navigation bar. Read from WindowMetrics where available and
+     * otherwise from the gap between the real display and the usable area,
+     * which is the only way to see it before Android 11.
+     */
+    private fun bottomInsetPx(): Int {
+        val wm = windowManager ?: return 0
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wm.currentWindowMetrics.windowInsets
+                .getInsets(android.view.WindowInsets.Type.navigationBars())
+                .bottom
+        } else {
+            @Suppress("DEPRECATION")
+            val real = android.util.DisplayMetrics().also { wm.defaultDisplay.getRealMetrics(it) }
+            @Suppress("DEPRECATION")
+            val usable = android.util.DisplayMetrics().also { wm.defaultDisplay.getMetrics(it) }
+            (real.heightPixels - usable.heightPixels).coerceAtLeast(0)
+        }
+    }
+
+    /** Uses the configured bubble size so the dismiss zone matches what is on screen. */
     private fun bubbleSizePx(): Int =
         (appearance.value.sizeDp * resources.displayMetrics.density).toInt()
 
@@ -362,9 +418,9 @@ class BubbleService : Service() {
         }
     }
 
-    private fun showTrashTarget() {
-        if (trashView != null) {
-            trashVisible.value = true
+    private fun showDismissTarget() {
+        if (dismissView != null) {
+            dismissVisible.value = true
             return
         }
         val params = WindowManager.LayoutParams(
@@ -383,34 +439,34 @@ class BubbleService : Service() {
             setViewTreeViewModelStoreOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-            setContent { TrashTarget(visibleFlow = trashVisible, activeFlow = trashActive) }
+            setContent { DismissTarget(visibleFlow = dismissVisible, activeFlow = dismissActive) }
         }
-        trashVisible.value = true
-        trashActive.value = false
+        dismissVisible.value = true
+        dismissActive.value = false
         try {
             windowManager?.addView(view, params)
-            trashView = view
-            trashOwner = owner
+            dismissView = view
+            dismissOwner = owner
         } catch (e: Exception) {
-            AppLog.w("Could not show trash target", e)
+            AppLog.w("Could not show the dismiss target", e)
             owner.destroy()
-            trashVisible.value = false
+            dismissVisible.value = false
         }
     }
 
-    private fun hideTrashTarget() {
-        trashVisible.value = false
-        trashActive.value = false
-        trashView?.let { view ->
+    private fun hideDismissTarget() {
+        dismissVisible.value = false
+        dismissActive.value = false
+        dismissView?.let { view ->
             try {
                 windowManager?.removeViewImmediate(view)
             } catch (e: Exception) {
-                AppLog.w("removing trash target failed", e)
+                AppLog.w("removing the dismiss target failed", e)
             }
         }
-        trashView = null
-        trashOwner?.destroy()
-        trashOwner = null
+        dismissView = null
+        dismissOwner?.destroy()
+        dismissOwner = null
     }
 
     private fun persistBubblePosition() {
@@ -550,7 +606,7 @@ class BubbleService : Service() {
     override fun onDestroy() {
         autoHideJob?.cancel()
         watchJob?.cancel()
-        hideTrashTarget()
+        hideDismissTarget()
         removeOverlay()
         serviceScope.cancel()
         super.onDestroy()
